@@ -1,0 +1,18 @@
+# Ignorar carpetas específicas
+build/
+dist/
+oikos.egg-info/
+
+# Python bytecode (archivos compilados)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Entornos virtuales (muy importante no subirlos)
+venv/
+.venv/
+env/
+
+# Variables de entorno (donde suelen ir contraseñas o tokens)
+.env

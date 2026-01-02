@@ -11,13 +11,13 @@ setup(
     description="Library for modeling and graphing economic models in Python.",
     long_description=longDescription,
     long_description_content_type="text/markdown",
-    url="",
+    url="https://github.com/marcosjuniorhernandez/economy",
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3 :: Only",
         "Intended Audience :: Education",
-        "Topic :: Scientific/Engineering :: Economics",
+        "Topic :: Scientific/Engineering",
         "License :: OSI Approved :: MIT License"
     ],
     install_requires=["numpy", "matplotlib"],
