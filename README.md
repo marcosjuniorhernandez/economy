@@ -1,8 +1,7 @@
 # oikos
+Oikos is a Python library focused on economic analysis and basic economic theory models.
 
-Oikos es una librería en Python orientada al análisis económico y modelos básicos de teoría económica.
-
-## Instalación
+## Installation
 ```bash
 pip install oikos
 ```
