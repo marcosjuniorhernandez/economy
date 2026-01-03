@@ -27,7 +27,7 @@ theme:
 nav:
   - Home: index.md
   - Installation: installation.md
-  - Notas de diseño: notas.md
+  - Changelog: changelog.md
 
 markdown_extensions:
   - pymdownx.arithmatex:
