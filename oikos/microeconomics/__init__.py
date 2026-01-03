@@ -1,7 +1,2 @@
-"""
-Microeconomics subpackage.
-"""
-
-from .market import Supply, Demand, equilibrium
-
-__all__ = ["Supply", "Demand", "equilibrium"]
+from .models import Demand, Supply
+from .market import equilibrium, show
