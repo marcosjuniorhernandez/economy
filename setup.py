@@ -5,10 +5,10 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="oikos",
-    version="0.1.0",
+    version="0.2.0",
     author="Marcos Jr.",
     author_email="iam.marcoshernandez@gmail.com",
-    description="Library for modeling and graphing economic models in Python.",
+    description="Library for economic models in Python.",
     long_description=longDescription,
     long_description_content_type="text/markdown",
     url="https://github.com/marcosjuniorhernandez/economy",
@@ -20,6 +20,11 @@ setup(
         "Topic :: Scientific/Engineering",
         "License :: OSI Approved :: MIT License"
     ],
-    install_requires=["numpy", "matplotlib"],
+
+    install_requires=["numpy", 
+                      "sympy", 
+                      "latex2sympy2", 
+                      "ipython"],
+    
     python_requires=">=3.8"
 )

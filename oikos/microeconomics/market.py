@@ -25,28 +25,3 @@ def equilibrium(supply, demand):
     equilibriumPrice = results[P]
     
     return equilibriumQuantity, equilibriumPrice
-        
-def show(res):
-    """
-    Muestra el resultado con formato matemático si está en un Notebook,
-    o como texto limpio si está en una terminal.
-    """
-    valueQuantity = latex(res[0])
-    valuePrice = latex(res[1])
-    
-    # 1. Creamos el string de LaTeX profesional
-    # Usamos \\\\ para el salto de línea en Math() y \quad para espacio
-    tex = rf"Q^{{*}} = {valueQuantity} \quad ; \quad P^{{*}} = {valuePrice}"
-    
-    # 2. Intentamos detectar si estamos en un entorno interactivo (Jupyter/Colab)
-    try:
-        # Si esto falla, es que no hay una interfaz gráfica para display
-        from IPython import get_ipython
-        if get_ipython() is not None:
-            display(Math(tex))
-        else:
-            # Si es una terminal normal, usamos un print limpio
-            print(f"Q* = {res[0]}, P* = {res[1]}")
-    except:
-        # Si algo falla con IPython, volvemos al print básico
-        print(f"Q* = {res[0]}, P* = {res[1]}")
