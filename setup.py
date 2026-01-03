@@ -11,7 +11,11 @@ setup(
     description="Library for economic models in Python.",
     long_description=longDescription,
     long_description_content_type="text/markdown",
-    url="https://github.com/marcosjuniorhernandez/economy",
+    url="https://github.com/marcosjuniorhernandez/economy", 
+    project_urls={
+        "Documentation": "https://marcosjuniorhernandez.github.io/economy/",
+        "Source": "https://github.com/marcosjuniorhernandez/economy",
+    },
     packages=find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
