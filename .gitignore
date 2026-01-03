@@ -16,3 +16,5 @@ env/
 
 # Variables de entorno (donde suelen ir contraseñas o tokens)
 .env
+
+site/
