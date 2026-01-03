@@ -3,7 +3,7 @@ __version__ = "0.1.0"
 
 # Microeconomía
 from .microeconomics import Demand, Supply
-from .microeconomics import equilibrium, show
+from .microeconomics import equilibrium
 
 # Macroeconomía
 from .macroeconomics import ISLM
