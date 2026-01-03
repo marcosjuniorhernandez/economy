@@ -7,17 +7,22 @@ repo_name: economy
 theme:
   name: material
   language: es
+  font:
+    text: Inter
+    code: JetBrains Mono
   features:
     - navigation.sections
     - navigation.top
+    - navigation.expand
     - content.code.copy
+    - content.tabs.link
   palette:
     - scheme: default
-      primary: indigo
-      accent: teal
+      primary: white
+      accent: indigo
     - scheme: slate
-      primary: indigo
-      accent: teal
+      primary: black
+      accent: indigo
 
 nav:
   - Home: index.md
@@ -30,9 +35,12 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.superfences
-  - pymdownx.highlight
+  - pymdownx.highlight:
+      use_pygments: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
 
 extra_javascript:
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
