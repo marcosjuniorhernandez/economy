@@ -1,0 +1,7 @@
+site_name: Oikos Library
+theme:
+  name: material
+
+nav:
+  - Inicio: index.md
+  - Instalación: installation.md
