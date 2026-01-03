@@ -1,17 +1,38 @@
-site_name: Oikos Library
+site_name: oikos
+site_description: Librería de Python para modelos y análisis económico
+site_author: Marcos Junior
+repo_url: https://github.com/marcosjuniorhernandez/economy
+repo_name: economy
 
 theme:
   name: material
+  language: es
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: teal
+    - scheme: slate
+      primary: indigo
+      accent: teal
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Notas de diseño: notas.md
 
 markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
 
 extra_javascript:
-  - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
-
-nav:
-  - Inicio: index.md
-  - Instalación: installation.md
-  - Notas: notas.md
