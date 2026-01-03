@@ -1,2 +1,2 @@
 from .models import Demand, Supply
-from .market import equilibrium, write
+from .market import equilibrium

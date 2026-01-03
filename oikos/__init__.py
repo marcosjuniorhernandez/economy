@@ -1,5 +1,5 @@
 # Definimos una versión de tu librería
-__version__ = "0.1.0"
+__version__ = "0.2.1"
 
 # Microeconomía
 from .microeconomics import Demand, Supply

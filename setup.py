@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="oikos",
-    version="0.2.0",
+    version="0.2.1",
     author="Marcos Jr.",
     author_email="iam.marcoshernandez@gmail.com",
     description="Library for economic models in Python.",
