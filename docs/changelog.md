@@ -1,86 +1,98 @@
-# Registro de Cambios
-Esta página contiene una lista de los cambios realizados entre versiones. 
+# Changelog
+
+Todos los cambios notables en este proyecto serán documentados en este archivo.
+
+El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/),
+y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
-## **v0.2.1**
-**Fecha:** 03 de enero, 2026  
 
-Esta es una versión de mantenimiento lanzada para corregir un error crítico en la API de salida que impedía el despliegue correcto de resultados en la terminal y entornos interactivos.
+## [0.2.1] - 2026-01-03
 
-### Correcciones
-1. **Exportación y Renderizado**
-* Se resolvió un conflicto de nombres en `ok.write` donde la función se importaba incorrectamente como `show`.
-* Restauración de la compatibilidad total con el motor de renderizado para visualización de equilibrios y multiplicadores.
-2. **Estabilidad del Sistema**
-* Corrección de la persistencia de datos en la salida de consola para Jupyter Notebooks y terminales estándar.
-
-### De interés para desarrolladores
-* Ajuste en el espacio de nombres (namespace) del módulo de ```utils```para asegurar la consistencia con la documentación de la v0.2.0.
+### Corregido
+- **Exportación y renderizado**: Conflicto de nombres en `ok.write()` que se importaba incorrectamente como `show`, causando errores en la visualización de resultados
+- **Compatibilidad de salida**: Restaurada la compatibilidad completa con el motor de renderizado para equilibrios y multiplicadores
+- **Persistencia de datos**: Corregida la salida en consola para Jupyter Notebooks y terminales estándar
+- **Namespace del módulo**: Ajustado el espacio de nombres de `utils` para consistencia con la documentación v0.2.0
 
 ---
-## v0.2.0
-**Fecha:** 03 de enero, 2026
 
-Esta versión representa un salto significativo desde la validación de concepto hacia una herramienta de modelado técnica robusta. Se introduce el paradigma de **Programación Orientada a Objetos (POO)**, soporte para ecuaciones no lineales y el primer motor de **Macroeconomía (IS-LM)**.
+## [0.2.0] - 2026-01-03
 
-### Nuevas funciones
-1. **Análisis Macroeconómico**
-* Implementación del modelo **IS-LM** para equilibrio simultáneo en mercados de bienes y dinero.
-* Adición de un motor de cálculo de multiplicadores fiscales y monetarios automáticos.
-* Soporte para determinación de nivel de ingreso ($Y^*$) y tasa de interés ($r^*$) de equilibrio.
-2. **Motor Microeconómico Avanzado**
-* Transición a clases globales: `Demand`, `Supply` e `ISLM`.
-* Soporte para **funciones no lineales** y ecuaciones hiperbólicas mediante procesamiento de *strings*.
-* Nuevo sistema de interpretación semántica de **elasticidades** (`getPriceInterpretation`).
-3. * **Sintaxis y Lógica**
-* Implementación de entrada de ecuaciones mediante **Raw Strings** (`r"..."`) para mayor flexibilidad.
-* Resolución automática de variables despejadas tanto en $P$ como en $Q$.
+Versión mayor que introduce **Programación Orientada a Objetos**, soporte para ecuaciones no lineales y análisis macroeconómico.
 
-### Documentación
-* Adición de ejemplos de implementación para modelos de economía cerrada.
-* Guía detallada sobre el uso de variables reservadas en macroeconomía ($Y, r, T$).
-* Actualización de la referencia de API para reflejar el nuevo paradigma de clases.
+### Añadido
 
-### Cambios importantes
-* **Migración a Clases (POO):** Las funciones globales de la v0.1.0 han sido depreciadas. Ahora toda la lógica se encapsula en objetos (ej. `ok.Demand`).
-* **Sintaxis de Ecuaciones:** Es obligatorio el uso de *Raw Strings* para definir curvas, permitiendo al motor realizar despejes automáticos.
-* **Redefinición de `equilibrium()`:** El método ahora requiere parámetros nombrados y detecta automáticamente el contexto (Micro o Macro).
+#### Macroeconomía
+- **Modelo IS-LM** para equilibrio simultáneo en mercados de bienes y dinero
+- Cálculo automático de multiplicadores fiscales y monetarios
+- Determinación de nivel de ingreso de equilibrio ($Y^*$) y tasa de interés de equilibrio ($r^*$)
+- Clase `ISLM` con variables reservadas (`output`, `interestRate`, `govermentSpending`)
 
-### De interés para desarrolladores
-* Implementación de un motor de parseo de ecuaciones para soportar pendientes variables.
-* Despliegue de variables reservadas vinculadas a la instancia del modelo para evitar colisiones de nombres.
+#### Microeconomía Avanzada
+- **Clases globales**: `Demand`, `Supply` e `ISLM` reemplazan las funciones globales
+- **Ecuaciones no lineales**: Soporte para funciones hiperbólicas y curvas complejas
+- **Interpretación semántica**: Método `getPriceInterpretation()` para análisis de elasticidades
+- **Motor de parseo**: Procesamiento automático de ecuaciones mediante Raw Strings (`r"..."`)
+- **Resolución flexible**: Detección automática de variables despejadas en $P$ o $Q$
 
-### Otros cambios
-* Optimización del comando `ok.write()` para visualización de resultados complejos.
+#### Documentación
+- Ejemplos completos de modelos de economía cerrada
+- Guía de uso de variables reservadas en macroeconomía
+- Referencia de API actualizada con paradigma POO
+- Ejemplos de implementación para ecuaciones no lineales
+
+### Cambiado
+- **[BREAKING]** Migración completa a Programación Orientada a Objetos
+  - Las funciones globales de v0.1.0 están **depreciadas**
+  - Toda la lógica ahora se encapsula en clases
+  - Ejemplo: `ok.Demand(r"Q = 100 - 2P")` en lugar de funciones independientes
+- **[BREAKING]** Sintaxis de ecuaciones requiere Raw Strings obligatoriamente
+- **[BREAKING]** Método `equilibrium()` rediseñado con parámetros nombrados y detección automática de contexto (Micro/Macro)
+
+### Mejorado
+- Optimización de `ok.write()` para visualización de resultados complejos
+- Motor de parseo permite pendientes variables y ecuaciones dinámicas
+- Sistema de variables reservadas evita colisiones de nombres en modelos
 
 ---
-## **v0.1.0** 
 
-**Fecha:** 
-02 de enero, 2025
+## [0.1.0] - 2025-01-02
 
-Esta es la versión inicial de **oikos**, una librería de Python diseñada para modelar y visualizar principios microeconómicos. El enfoque de esta versión es validar la lógica central de mercados lineales de oferta y demanda.
+Lanzamiento inicial de **oikos** - Validación de concepto para modelado microeconómico.
 
-### Funciones
-* **Motor de Mercado**
-* Implementación de las clases `Supply` y `Demand` para modelado lineal.
-* Adición de la función `equilibrium` para calcular el precio y la cantidad de equilibrio.
-* Implementación del método `.quantity(P)` para consultas puntuales de cantidad según el precio.
-* **Sistema de Gráficos**
-* Adición de `marketGraph` para la visualización básica del equilibrio de mercado.
-* Implementación de `surplusGraph` para renderizar las áreas de excedente del consumidor y del productor.
-* **Arquitectura Core**
-* Sistema de importación unificado mediante `oikos.microeconomics.market`.
-    * Calibración manual de parámetros para variables exógenas.
+### Añadido
 
-### Documentación
-* Adición de instrucciones de instalación y ejemplos básicos de uso.
-* Implementación de soporte para notación $\LaTeX$ en la documentación económica.
-* Adición de una referencia de API completa para las funciones principales.
+#### Motor de Mercado
+- Clases `Supply` y `Demand` para modelado lineal básico
+- Función `equilibrium()` para cálculo de precio y cantidad de equilibrio
+- Método `.quantity(P)` para consultas puntuales
 
-### De interés para desarrolladores
-* Estructura inicial del proyecto diseñada para el modelado experimental de baja fidelidad.
-* Lógica integrada entre el cálculo económico y el renderizado con Matplotlib.
+#### Visualización
+- Función `marketGraph()` para gráficos de equilibrio de mercado
+- Función `surplusGraph()` para renderizar excedentes del consumidor y productor
+- Integración con Matplotlib para renderizado
 
-### Otros cambios
-* Configuración inicial del repositorio y licencias.
+#### Infraestructura
+- Sistema de importación unificado mediante `oikos.microeconomics.market`
+- Estructura modular del proyecto
+
+#### Documentación
+- Guía de instalación y configuración
+- Ejemplos básicos de uso
+- Referencia completa de API
+- Configuración de repositorio y licencias
+
+---
+
+## Leyenda de Tipos de Cambio
+
+- **Añadido**: Para funcionalidades nuevas
+- **Cambiado**: Para cambios en funcionalidades existentes
+- **Depreciado**: Para funcionalidades que serán removidas
+- **Removido**: Para funcionalidades removidas
+- **Corregido**: Para corrección de bugs
+- **Seguridad**: Para vulnerabilidades de seguridad
+- **[BREAKING]**: Cambios que rompen compatibilidad hacia atrás
+
+---
