@@ -1,6 +1,6 @@
 # Changelog
 
-Todos los cambios relevantes de **oikos** se documentan en este archivo.
+Esta página contiene una lista de los cambios realizados entre versiones. 
 
 ---
 
@@ -104,55 +104,62 @@ El método `ok.equilibrium()` ahora detecta automáticamente si estás comparand
 Para el modelo IS-LM, es obligatorio asignar los símbolos de la instancia a variables locales (`Y = modelo.output`, `r = modelo.interestRate`) para que el motor reconozca los componentes de las funciones de Consumo, Inversión y Dinero.
 
 ---
-## v0.1.0 — Versión inicial
+## v0.1.0 
+[Versión inicial]
 
-**Fecha:**  02 Enero de 2025
-Esta es la **primera versión pública de oikos**.  
-El objetivo principal de esta versión fue **asegurar el nombre del proyecto** y validar un primer enfoque funcional para modelar conceptos básicos de microeconomía mediante Python.
-La implementación fue deliberadamente simple y experimental, sin una arquitectura madura ni una API definitiva.
----
+**Fecha:** 
+&nbsp;02 Enero de 2025
+
+El objetivo central de este lanzamiento es consolidar la identidad del proyecto y validar la viabilidad técnica de modelar principios microeconómicos mediante Python. Se trata de un modelo de baja fidelidad diseñado para testear la arquitectura lógica inicial.
+
+La implementación se presenta como un prototipo experimental; prioriza la demostración de conceptos básicos sobre la robustez arquitectónica o la definición de una librería final.
 
 ### Alcance general
-- Modelo único de **oferta y demanda lineal**.
-- Parámetros ingresados manualmente.
-- Importaciones poco intuitivas comparadas con versiones posteriores.
-- Sin separación clara entre lógica económica y visualización.
-- Enfoque exclusivo en microeconomía básica.
+1. Implementación de un modelo único de oferta y demanda lineal, optimizado para el cálculo de equilibrios estáticos.
+2. Gestión manual de parámetros, lo que permite una calibración directa de las variables exógenas por parte del analista.
+3. Estructura de importación ```from oikos.microeconomics.market import Demand, Supply, equilibrium```, diseñada para un acceso a las funciones principales en esta etapa temprana.
+4. Arquitectura integrada, donde la lógica económica y la visualización de datos operan de forma conjunta para reducir la fricción inicial.
+5. Especialización en microeconomía básica, con un enfoque centrado en los fundamentos de la teoría del mercado.
 
----
 ### Funciones disponibles
-
-La versión **v0.1.0** incluía únicamente **5 funciones**, todas orientadas a representar un mercado competitivo simple.
+La versión **v0.1.0** incluye únicamente **6 funciones**, todas orientadas a representar un mercado competitivo simple.
 
 #### 1. Oferta lineal
 Define una función de oferta de la forma:
 
 \[
-Q_s = a + bP
+    Q_s = c + dP
 \]
 
 **Representación económica:**  
 Modela el comportamiento de los productores, donde la cantidad ofrecida aumenta a medida que sube el precio.
 
----
+```python
+from oikos.microeconomics.market import Supply
+
+demanda = Supply(0, 2)
+```
 
 #### 2. Demanda lineal
 Define una función de demanda de la forma:
 
 \[
-Q_d = c - dP
+    Q_d = a - bP
 \]
 
 **Representación económica:**  
 Modela el comportamiento de los consumidores, donde la cantidad demandada disminuye cuando el precio aumenta.
 
----
+```python
+from oikos.microeconomics.market import Demand
+
+demanda = Demand(120, 1)
+```
 
 #### 3. Equilibrio de mercado
-Calcula el punto donde:
 
 \[
-Q_s = Q_d
+    Q^{S} = Q^{D}
 \]
 
 Devuelve el **precio de equilibrio** y la **cantidad de equilibrio**.
@@ -160,26 +167,58 @@ Devuelve el **precio de equilibrio** y la **cantidad de equilibrio**.
 **Representación económica:**  
 Corresponde al estado del mercado donde no existen fuerzas internas que empujen el precio al alza o a la baja.
 
----
+```python
+from oikos.microeconomics.market import Supply, Demand, equilibrium
 
-#### 4. ```marketGraph(oferta, demanda)```
-Genera una visualización básica del mercado mostrando:
+oferta = Supply(0, 2)
+demanda = Demand(120, 1)
 
-- Curva de oferta
-- Curva de demanda
-- Punto de equilibrio
+equilibrium(oferta, demanda)
+```
 
-**Representación económica:**  
-Permite observar gráficamente la interacción entre consumidores y productores en un mercado competitivo.
-![Excendentes](docs/imgs/v0.1.0 (1).png)
+OUTPUT: ```>>> (40.0, 80.0)```
 
----
-
-#### 5. ```surplusGraph(oferta, demanda)
+#### 4. `oferta.quantity(12)`
+Retorna la cantidad ofrecida a un nivel de precios determinado.
 
 ```python
+# Ejemplo de consulta puntual
+oferta.quantity(12)
+```
+
+### Otras funcionalidades 
+#### 5. ```marketGraph(oferta, demanda)```
+Genera una visualización básica del mercado que integra los elementos fundamentales del equilibrio:
+
+```python
+from oikos.graphs import marketGraph
+
+marketGraph(oferta, demanda)
+```
+
+* **Curva de oferta:** Representación de la disposición a vender.
+* **Curva de demanda:** Representación de la disposición a pagar.
+* **Punto de equilibrio:** Intersección que determina el precio y cantidad de vaciado del mercado.
+
+**Representación económica:** Esta función permite observar gráficamente la interacción entre agentes (consumidores y productores) en un mercado competitivo, facilitando el análisis visual de la eficiencia del equilibrio.
+
+![Equilibrio](imgs/v0.1.0_(1).png)
+
+#### 6. ```surplusGraph(oferta, demanda)```
+
+```python
+from oikos.graphs import surplusGraph
+
 surplusGraph(oferta, demanda)
 ```
 
+**Representación económica:**
+- Excedente del Consumidor ($EC$): Representa el ahorro acumulado de los agentes cuya valoración subjetiva (disposición a pagar) es superior al precio de mercado ($P^*$). Es la medida del beneficio neto del consumidor.
+
+- Excedente del Productor ($EP$): Refleja la renta económica de los productores cuyos costos marginales son inferiores al precio de venta. Representa la ganancia monetaria por encima del costo de producción.
+
 Visualiza de forma simple:
-![Excendentes](docs/imgs/v0.1.0 (2).png)
+![Excendentes](imgs/v0.1.0_(2).png)
+
+### Documentación
+Se agregaron instrucciones de instalación, tutoriales, ejemplos y referencias de API más claras.
