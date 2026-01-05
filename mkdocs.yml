@@ -26,8 +26,8 @@ theme:
 
 nav:
   - Inicio: index.md
-  - Manual de Referencia: manual.md
-  - Changelog: changelog.md
+  - Manual de uso: manual.md
+  - Registro de cambios: changelog.md
   - Contribuciones: contributing.md
 
 markdown_extensions:
