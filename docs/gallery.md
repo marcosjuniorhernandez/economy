@@ -1,0 +1,2 @@
+# Galería de Ejemplos
+Esta galería contiene una colección de fragmentos de código de mejores prácticas junto con su correspondiente salida, ilustrando diferentes funcionalidades en toda la biblioteca. Todos estos están bajo la licencia MIT, así que siéntete libre de copiarlos y pegarlos en tus proyectos. ¡Disfruta de oikos!
