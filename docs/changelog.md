@@ -4,7 +4,8 @@ Esta página contiene una lista de los cambios realizados entre versiones.
 
 ---
 
-## v0.2.1 — Hotfix: Corrección de Exportación
+## **v0.2.1**
+[Hotfix: Corrección de Exportación]
 
 **Fecha:** 03 Enero de 2026  
 Esta es una versión de mantenimiento para corregir un error crítico en la API de salida.
@@ -104,11 +105,11 @@ El método `ok.equilibrium()` ahora detecta automáticamente si estás comparand
 Para el modelo IS-LM, es obligatorio asignar los símbolos de la instancia a variables locales (`Y = modelo.output`, `r = modelo.interestRate`) para que el motor reconozca los componentes de las funciones de Consumo, Inversión y Dinero.
 
 ---
-## v0.1.0 
+## **v0.1.0** 
 [Versión inicial]
 
 **Fecha:** 
-&nbsp;02 Enero de 2025
+02 Enero de 2025
 
 El objetivo central de este lanzamiento es consolidar la identidad del proyecto y validar la viabilidad técnica de modelar principios microeconómicos mediante Python. Se trata de un modelo de baja fidelidad diseñado para testear la arquitectura lógica inicial.
 
