@@ -232,7 +232,7 @@ resultado = modeloISLM.equilibrium(
 )
 
 # Visualizar resultados
-ok.write(resultado)
+ok.escribir(resultado)
 ```
 
 **Salida esperada:**
@@ -245,7 +245,7 @@ Y* = 4783.33 ; r* = -0.69 ; fiscal_multiplier = 1.67 ; monetary_multiplier = 3.3
 
 ## Función Auxiliar
 
-### `write(result)`
+### `escribir(result)`
 
 Formatea y muestra resultados en formato LaTeX para Jupyter Notebook.
 
@@ -255,5 +255,5 @@ Formatea y muestra resultados en formato LaTeX para Jupyter Notebook.
 **Ejemplo:**
 
 ```python
-ok.write(resultado)
+ok.escribir(resultado)
 ```

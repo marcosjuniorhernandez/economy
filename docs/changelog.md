@@ -10,7 +10,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 ## [0.2.1] - 2026-01-03
 
 ### Corregido
-- **Exportación y renderizado**: Conflicto de nombres en `ok.write()` que se importaba incorrectamente como `show`, causando errores en la visualización de resultados
+- **Exportación y renderizado**: Conflicto de nombres en `ok.escribir()` que se importaba incorrectamente como `show`, causando errores en la visualización de resultados
 - **Compatibilidad de salida**: Restaurada la compatibilidad completa con el motor de renderizado para equilibrios y multiplicadores
 - **Persistencia de datos**: Corregida la salida en consola para Jupyter Notebooks y terminales estándar
 - **Namespace del módulo**: Ajustado el espacio de nombres de `utils` para consistencia con la documentación v0.2.0
@@ -51,7 +51,7 @@ Versión mayor que introduce **Programación Orientada a Objetos**, soporte para
 - **[BREAKING]** Método `equilibrium()` rediseñado con parámetros nombrados y detección automática de contexto (Micro/Macro)
 
 ### Mejorado
-- Optimización de `ok.write()` para visualización de resultados complejos
+- Optimización de `ok.escribir()` para visualización de resultados complejos
 - Motor de parseo permite pendientes variables y ecuaciones dinámicas
 - Sistema de variables reservadas evita colisiones de nombres en modelos
 

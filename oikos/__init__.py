@@ -1,14 +1,151 @@
-# Definimos una versión de tu librería
-__version__ = "0.2.1"
+"""
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║                         OIKOS v0.3.0                             ║
+║              Librería para Economía en Python                    ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
 
-# Microeconomía
-from .microeconomics import Demand, Supply
-from .microeconomics import equilibrium
+Oikos es una librería académica diseñada para enseñar y entender
+teoría económica mediante código Python.
 
-# Macroeconomía
-from .macroeconomics import ISLM
-from .microeconomics import equilibrium
+El código se lee como economía, no como matemática.
 
-# Traemos herramientas útiles
-from .utils.parser import translatex
-from .utils.visuals import write
+Características principales:
+- Parser LaTeX para ecuaciones económicas
+- Gráficos con estilo profesional
+- Sistema de ayuda contextual
+- Validación automática de parámetros
+- Soporte completo en español
+
+Autor: Marcos Jr.
+Licencia: MIT
+Documentación: https://oikos.readthedocs.io/en/latest/manual/
+"""
+
+__version__ = "0.3.0"
+__author__ = "Marcos Jr."
+
+# ============= MICROECONOMÍA =============
+from .microeconomia import (
+    Demanda,
+    Oferta,
+    equilibrio,
+    excedentes
+)
+
+# ============= MACROECONOMÍA =============
+from .macroeconomia import (
+    ISLM
+)
+
+# ============= UTILIDADES =============
+from .utilidades import (
+    # Parseador
+    translatex,
+    despejar,
+    extraerVariables,
+    
+    # Visuales
+    escribir,
+    Lienzo,
+    EstiloGrafico,
+    graficoRapido,
+    
+    # Colores predefinidos
+    ROJO, AZUL, VERDE, AMARILLO, NARANJA, MORADO, TURQUESA, ROSA,
+    
+    # Validadores
+    validarPositivo,
+    validarNoNegativo,
+    validarRango,
+    validarPropension,
+    
+    # Decoradores
+    ayuda,
+    explicacion
+)
+
+# ============= EXCEPCIONES =============
+from .nucleo.excepciones import (
+    ErrorOikos,
+    ErrorParseador,
+    ErrorEquilibrio,
+    ErrorValidacion,
+    ErrorGrafico
+)
+
+
+__all__ = [
+    # Versión
+    '__version__',
+    
+    # Microeconomía
+    'Demanda',
+    'Oferta',
+    'equilibrio',
+    'excedentes',
+    
+    # Macroeconomía
+    'ISLM',
+    
+    # Utilidades - Parseador
+    'translatex',
+    'despejar',
+    'extraerVariables',
+    
+    # Utilidades - Visuales
+    'escribir',
+    'Lienzo',
+    'EstiloGrafico',
+    'graficoRapido',
+    
+    # Colores
+    'ROJO', 'AZUL', 'VERDE', 'AMARILLO', 'NARANJA', 'MORADO', 'TURQUESA', 'ROSA',
+    
+    # Validadores
+    'validarPositivo',
+    'validarNoNegativo',
+    'validarRango',
+    'validarPropension',
+    
+    # Decoradores
+    'ayuda',
+    'explicacion',
+    
+    # Excepciones
+    'ErrorOikos',
+    'ErrorParseador',
+    'ErrorEquilibrio',
+    'ErrorValidacion',
+    'ErrorGrafico'
+]
+
+
+def info():
+    """
+    Muestra información sobre Oikos.
+    """
+    print(f"""
+    ╔══════════════════════════════════════════════════════════════════╗
+    ║                      OIKOS v{__version__}                              ║
+    ║            Librería para Economía en Python                      ║
+    ╚══════════════════════════════════════════════════════════════════╝
+    
+    📚 Módulos disponibles:
+       • microeconomia: Demanda, Oferta, Equilibrio
+       • macroeconomia: IS-LM, OA-DA (próximamente)
+       • utilidades: Gráficos, Parser, Validadores
+    
+    🎨 Colores predefinidos:
+       ROJO, AZUL, VERDE, AMARILLO, NARANJA, MORADO, TURQUESA, ROSA
+    
+    💡 Ejemplo rápido:
+       >>> import oikos as ok
+       >>> demanda = ok.Demanda("Q = 100 - 2P")
+       >>> oferta = ok.Oferta("Q = -20 + 3P")
+       >>> eq = ok.equilibrio(oferta, demanda)
+       >>> ok.escribir(eq, "Equilibrio")
+    
+    📖 Documentación: https://oikos.readthedocs.io/en/latest/manual/
+    """)
