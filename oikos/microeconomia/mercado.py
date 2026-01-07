@@ -562,15 +562,38 @@ def equilibrio(oferta: Oferta, demanda: Demanda) -> Dict[str, float]:
             "No existe equilibrio para este mercado. "
             "Verifica que las curvas se crucen."
         )
-    
-    if len(soluciones) > 1:
+
+    # CORRECCIÓN: Filtrar soluciones con valores positivos (Q > 0 y P > 0)
+    # En economía, solo nos interesan equilibrios con cantidades y precios positivos
+    soluciones_validas = []
+    for sol in soluciones:
+        from sympy import re, im, N
+        q_val = N(sol[Q])
+        p_val = N(sol[P])
+
+        # Verificar que sean reales (no complejos)
+        if abs(float(im(q_val))) < 1e-10 and abs(float(im(p_val))) < 1e-10:
+            q_real = float(re(q_val))
+            p_real = float(re(p_val))
+
+            # Solo considerar soluciones con P > 0 y Q > 0
+            if q_real > 0 and p_real > 0:
+                soluciones_validas.append(sol)
+
+    if len(soluciones_validas) == 0:
         raise ErrorEquilibrio(
-            f"Existen {len(soluciones)} equilibrios. "
+            "No existe equilibrio con valores positivos para este mercado. "
+            "Verifica que las curvas se crucen en el primer cuadrante (P > 0, Q > 0)."
+        )
+
+    if len(soluciones_validas) > 1:
+        raise ErrorEquilibrio(
+            f"Existen {len(soluciones_validas)} equilibrios con valores positivos. "
             "Este caso requiere análisis adicional."
         )
-    
-    # Extraemos la solución única
-    solucion = soluciones[0]
+
+    # Usar la única solución válida
+    solucion = soluciones_validas[0]
 
     # Verificar que las soluciones sean números reales
     cantidad_sym = solucion[Q]

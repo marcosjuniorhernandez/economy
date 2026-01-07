@@ -88,103 +88,136 @@ class ISLM(ModeloEconomico):
                   ofertaMonetaria: float,
                   nivelPrecios: float = 1.0) -> Dict[str, float]:
         """
-        Calcula el equilibrio IS-LM.
-        
+        Calcula el equilibrio IS-LM (donde se cruzan las curvas IS y LM).
+
+        GUÍA PARA ECONOMISTAS:
+        Este método hace 3 cosas:
+        1. Encuentra el punto donde Oferta = Demanda en el mercado de bienes (curva IS)
+        2. Encuentra el punto donde Oferta = Demanda de dinero (curva LM)
+        3. Resuelve ambas ecuaciones simultáneamente para encontrar Y* y r*
+
         Args:
-            consumo: Función de consumo en LaTeX
-                    Ejemplo: "C = 200 + 0.8(Y - T)"
-            inversion: Función de inversión en LaTeX
-                      Ejemplo: "I = 1000 - 50r"
-            demandaDinero: Demanda de dinero en LaTeX
-                          Ejemplo: "L = 0.25Y - 50r"
-            gastoPublico: Gasto del gobierno (G)
-            impuestos: Impuestos netos (T)
-            ofertaMonetaria: Oferta monetaria nominal (M)
-            nivelPrecios: Nivel de precios (P), default=1
-            
+            consumo: Cómo gastan las familias según su ingreso disponible
+                    Ejemplo: "C = 200 + 0.8(Y - T)" significa que consumen 200 de forma autónoma
+                    más 80% de su ingreso disponible (Y-T es ingreso después de impuestos)
+
+            inversion: Cuánto invierten las empresas según la tasa de interés
+                      Ejemplo: "I = 1000 - 50r" significa que si r=0% invierten 1000,
+                      pero por cada 1% que sube r, la inversión cae en 50 unidades
+
+            demandaDinero: Cuánto dinero quiere la gente tener en efectivo
+                          Ejemplo: "L = 0.25Y - 50r" significa que quieren más dinero
+                          cuando tienen más ingreso (Y), pero menos cuando r es alta
+
+            gastoPublico: Cuánto gasta el gobierno (G) en bienes y servicios
+            impuestos: Cuánto recauda el gobierno (T) en impuestos
+            ofertaMonetaria: Cuánto dinero hay circulando en la economía (M)
+            nivelPrecios: Nivel general de precios (P), normalmente = 1
+
         Returns:
-            Diccionario con:
-                - 'Y*': Producto de equilibrio
-                - 'i*': Tasa de interés de equilibrio
-                - 'multiplicador_fiscal': ∂Y/∂G
-                - 'multiplicador_monetario': ∂Y/∂M
-                - 'C*': Consumo de equilibrio
-                - 'I*': Inversión de equilibrio
-                
+            Diccionario con los valores de equilibrio:
+                - 'Y*': Producto/Ingreso de equilibrio (PIB de corto plazo)
+                - 'r*': Tasa de interés de equilibrio
+                - 'k': Multiplicador fiscal (cuánto aumenta Y si G sube en 1)
+                - 'm': Multiplicador monetario (cuánto aumenta Y si M sube en 1)
+                - 'C*': Consumo total en equilibrio
+                - 'I*': Inversión total en equilibrio
+
         Raises:
-            ErrorEquilibrio: Si no se puede resolver el sistema
+            ErrorEquilibrio: Si las curvas no se cruzan (no hay equilibrio)
         """
-        # 1. Parsear las funciones de comportamiento
-        C_eq = translatex(consumo)
-        I_eq = translatex(inversion)
-        L_eq = translatex(demandaDinero)
+        # ========== PASO 1: PARSEAR LAS ECUACIONES ==========
+        # Convertimos las ecuaciones de texto LaTeX a expresiones matemáticas
+        # que Python puede manipular
+        ecuacionConsumo = translatex(consumo)
+        ecuacionInversion = translatex(inversion)
+        ecuacionDemandaDinero = translatex(demandaDinero)
 
-        # Extraer lado derecho de las ecuaciones (rhs = right hand side)
-        C_expr = C_eq.rhs if hasattr(C_eq, 'rhs') else C_eq
-        I_expr = I_eq.rhs if hasattr(I_eq, 'rhs') else I_eq
-        L_expr = L_eq.rhs if hasattr(L_eq, 'rhs') else L_eq
+        # Extraemos el lado derecho de cada ecuación (después del "=")
+        # Por ejemplo, de "C = 200 + 0.8Y" extraemos "200 + 0.8Y"
+        expresionConsumo = ecuacionConsumo.rhs if hasattr(ecuacionConsumo, 'rhs') else ecuacionConsumo
+        expresionInversion = ecuacionInversion.rhs if hasattr(ecuacionInversion, 'rhs') else ecuacionInversion
+        expresionDemandaDinero = ecuacionDemandaDinero.rhs if hasattr(ecuacionDemandaDinero, 'rhs') else ecuacionDemandaDinero
 
-        # Sustituir notaciones alternativas de tasa de interés por 'i'
-        # Esto permite que el usuario use 'r', 'rho', 'rate', etc.
-        for expr in [C_expr, I_expr, L_expr]:
-            simbolos = expr.free_symbols
-            for s in simbolos:
-                nombre = str(s)
-                # Si encuentra 'r', 'rho', 'rate' o similar, lo sustituye por 'i'
-                if nombre.lower() in ['r', 'rho', 'rate']:
-                    if s == symbols('r'):
-                        C_expr = C_expr.subs(s, self.i)
-                        I_expr = I_expr.subs(s, self.i)
-                        L_expr = L_expr.subs(s, self.i)
+        # ========== PASO 2: NORMALIZAR LA TASA DE INTERÉS ==========
+        # Permitimos que el usuario use 'r', 'rho', 'rate' en lugar de 'i'
+        # Esto hace la librería más flexible
+        for expresion in [expresionConsumo, expresionInversion, expresionDemandaDinero]:
+            simbolos = expresion.free_symbols
+            for simbolo in simbolos:
+                nombreSimbolo = str(simbolo)
+                # Si el usuario escribió 'r' en vez de 'i', lo cambiamos internamente
+                if nombreSimbolo.lower() in ['r', 'rho', 'rate']:
+                    if simbolo == symbols('r'):
+                        expresionConsumo = expresionConsumo.subs(simbolo, self.i)
+                        expresionInversion = expresionInversion.subs(simbolo, self.i)
+                        expresionDemandaDinero = expresionDemandaDinero.subs(simbolo, self.i)
 
-        # 2. Definir condiciones de equilibrio
-        # IS: Y = C + I + G
-        ecuacionIS = self.Y - C_expr - I_expr - self.G
+        # ========== PASO 3: PLANTEAR LAS CONDICIONES DE EQUILIBRIO ==========
+        # Curva IS: En el mercado de bienes, Oferta = Demanda
+        # Esto es: Y = C + I + G (el producto debe igualar al gasto total)
+        # La reorganizamos como: Y - C - I - G = 0
+        ecuacionIS = self.Y - expresionConsumo - expresionInversion - self.G
 
-        # LM: M/P = L(Y, i)
-        ecuacionLM = L_expr - (self.M / self.P)
-        
-        # 3. Resolver sistema simbólicamente (para multiplicadores)
+        # Curva LM: En el mercado de dinero, Oferta = Demanda
+        # Esto es: M/P = L(Y, i) (oferta real de dinero = demanda de dinero)
+        # La reorganizamos como: L - M/P = 0
+        ecuacionLM = expresionDemandaDinero - (self.M / self.P)
+
+        # ========== PASO 4: RESOLVER EL SISTEMA DE ECUACIONES ==========
+        # Resolvemos simultáneamente IS y LM para encontrar Y* e i*
         try:
-            solucion_simbolica = solve(
-                [ecuacionIS, ecuacionLM],
-                (self.Y, self.i)
+            solucionSimbolica = solve(
+                [ecuacionIS, ecuacionLM],  # Las dos ecuaciones
+                (self.Y, self.i)            # Las dos incógnitas
             )
-        except Exception as e:
-            raise ErrorEquilibrio(f"No se pudo resolver el sistema IS-LM: {str(e)}")
-        
-        if not solucion_simbolica:
+        except Exception as error:
+            raise ErrorEquilibrio(f"No se pudo resolver el sistema IS-LM: {str(error)}")
+
+        if not solucionSimbolica:
             raise ErrorEquilibrio("No existe equilibrio IS-LM para estos parámetros")
-        
-        Y_estrella_expr = solucion_simbolica[self.Y]
-        i_estrella_expr = solucion_simbolica[self.i]
-        
-        # 4. Calcular multiplicadores
-        multiplicadorFiscal = diff(Y_estrella_expr, self.G)
-        multiplicadorMonetario = diff(Y_estrella_expr, self.M)
-        
-        # 5. Sustituir valores numéricos
-        valores = {
+
+        # Extraemos las expresiones simbólicas de Y* e i*
+        expresionYestrella = solucionSimbolica[self.Y]
+        expresionIestrella = solucionSimbolica[self.i]
+
+        # ========== PASO 5: CALCULAR MULTIPLICADORES ==========
+        # El multiplicador fiscal (k) nos dice cuánto cambia Y si G cambia en 1
+        # Por ejemplo, si k=2, entonces un aumento de G en 100 aumenta Y en 200
+        multiplicadorFiscal = diff(expresionYestrella, self.G)
+
+        # El multiplicador monetario (m) nos dice cuánto cambia Y si M cambia en 1
+        multiplicadorMonetario = diff(expresionYestrella, self.M)
+
+        # ========== PASO 6: SUSTITUIR VALORES NUMÉRICOS ==========
+        # Reemplazamos las variables G, T, M, P por sus valores concretos
+        valoresNumericos = {
             self.G: gastoPublico,
             self.T: impuestos,
             self.M: ofertaMonetaria,
             self.P: nivelPrecios
         }
-        
-        Y_equilibrio = float(Y_estrella_expr.subs(valores))
-        i_equilibrio = float(i_estrella_expr.subs(valores))
-        
-        # 6. Calcular C* e I* de equilibrio
-        C_equilibrio = float(C_expr.subs({**valores, self.Y: Y_equilibrio, self.i: i_equilibrio}))
-        I_equilibrio = float(I_expr.subs({**valores, self.Y: Y_equilibrio, self.i: i_equilibrio}))
-        
+
+        # Calculamos Y* e i* numéricamente
+        Yestrella = float(expresionYestrella.subs(valoresNumericos))
+        iestrella = float(expresionIestrella.subs(valoresNumericos))
+
+        # ========== PASO 7: CALCULAR C* E I* DE EQUILIBRIO ==========
+        # Ahora que conocemos Y* e i*, podemos calcular cuánto se consume
+        # y cuánto se invierte en equilibrio
+        valoresCompletos = {**valoresNumericos, self.Y: Yestrella, self.i: iestrella}
+
+        Cestrella = float(expresionConsumo.subs(valoresCompletos))
+        Iestrella = float(expresionInversion.subs(valoresCompletos))
+
+        # ========== RETORNAR RESULTADOS ==========
         return {
-            'Y*': Y_equilibrio,
-            'r*': i_equilibrio,
-            'k': float(multiplicadorFiscal.subs(valores)),
-            'm': float(multiplicadorMonetario.subs(valores)),
-            'C*': C_equilibrio,
-            'I*': I_equilibrio
+            'Y*': Yestrella,                                              # Producto de equilibrio
+            'r*': iestrella,                                              # Tasa de interés de equilibrio
+            'k': float(multiplicadorFiscal.subs(valoresNumericos)),      # Multiplicador fiscal
+            'm': float(multiplicadorMonetario.subs(valoresNumericos)),   # Multiplicador monetario
+            'C*': Cestrella,                                              # Consumo de equilibrio
+            'I*': Iestrella                                               # Inversión de equilibrio
         }
     
     def resolver(self) -> Dict[str, float]:
@@ -197,18 +230,261 @@ class ISLM(ModeloEconomico):
         return """
         El modelo IS-LM muestra cómo se determina el ingreso (Y) y la tasa de interés (i)
         en el corto plazo cuando los precios son rígidos.
-        
+
         - La curva IS representa combinaciones de (Y, i) donde el mercado de bienes está en equilibrio
         - La curva LM representa combinaciones de (Y, i) donde el mercado de dinero está en equilibrio
         - El equilibrio ocurre donde se cruzan ambas curvas
-        
+
         Política Fiscal Expansiva (↑G):
             → IS se desplaza a la derecha
             → ↑Y, ↑r
             → Puede causar "efecto expulsión" de la inversión privada
-        
+
         Política Monetaria Expansiva (↑M):
             → LM se desplaza a la derecha
             → ↑Y, ↓r
             → Estimula inversión privada
         """
+
+    def politicaMonetaria(self,
+                         tipo: str,
+                         magnitud: float,
+                         consumo: str,
+                         inversion: str,
+                         demandaDinero: str,
+                         gastoPublico: float,
+                         impuestos: float,
+                         ofertaMonetariaInicial: float,
+                         nivelPrecios: float = 1.0) -> Dict[str, any]:
+        """
+        Simula el efecto de una política monetaria en el equilibrio IS-LM.
+
+        GUÍA PARA ECONOMISTAS:
+        Este método te permite ver qué pasa cuando el Banco Central:
+        - EXPANDE la oferta monetaria (M↑): "imprime dinero" o baja la tasa de interés
+        - CONTRAE la oferta monetaria (M↓): "retira dinero" o sube la tasa de interés
+
+        En el gráfico IS-LM, esto desplaza la curva LM:
+        - Política EXPANSIVA → LM se mueve a la DERECHA → Y↑ y r↓
+        - Política CONTRACTIVA → LM se mueve a la IZQUIERDA → Y↓ y r↑
+
+        Args:
+            tipo: "EXPANSIVA" (para estimular economía) o "CONTRACTIVA" (para frenarla)
+            magnitud: Cuánto cambia M (por ejemplo, 100 = inyectar 100 unidades de dinero)
+            consumo, inversion, demandaDinero: Las ecuaciones de comportamiento (igual que equilibrio)
+            gastoPublico, impuestos: Variables fiscales (G y T)
+            ofertaMonetariaInicial: Cuánto dinero hay ANTES de la política
+            nivelPrecios: Nivel de precios (normalmente = 1)
+
+        Returns:
+            Diccionario completo con:
+                - 'tipo': EXPANSIVA o CONTRACTIVA
+                - 'equilibrioInicial': Valores de Y*, r*, C*, I* ANTES del cambio
+                - 'equilibrioFinal': Valores de Y*, r*, C*, I* DESPUÉS del cambio
+                - 'cambios': Los \Delta s (ΔY, Δr, ΔC, ΔI, ΔM)
+                - 'efectoExpulsion': False (política monetaria NO causa crowding-out normalmente)
+
+        Ejemplo:
+            >>> modelo = ISLM()
+            >>> resultado = modelo.politicaMonetaria(
+            ...     tipo="EXPANSIVA",
+            ...     magnitud=50,  # El BC inyecta 50 unidades
+            ...     consumo="C = 200 + 0.8(Y - 150)",
+            ...     inversion="I = 300 - 20r",
+            ...     demandaDinero="L = 0.2Y - 10r",
+            ...     gastoPublico=200,
+            ...     impuestos=150,
+            ...     ofertaMonetariaInicial=200
+            ... )
+            >>> print(f"El PIB aumentó en: {resultado['cambios']['\Delta Y']}")
+        """
+        # Validar que el tipo sea correcto
+        tipoNormalizado = tipo.upper()
+        if tipoNormalizado not in ["EXPANSIVA", "CONTRACTIVA"]:
+            raise ValueError("El tipo debe ser 'EXPANSIVA' o 'CONTRACTIVA'")
+
+        # ========== PASO 1: CALCULAR EQUILIBRIO INICIAL (ANTES DE LA POLÍTICA) ==========
+        equilibrioInicial = self.equilibrio(
+            consumo=consumo,
+            inversion=inversion,
+            demandaDinero=demandaDinero,
+            gastoPublico=gastoPublico,
+            impuestos=impuestos,
+            ofertaMonetaria=ofertaMonetariaInicial,
+            nivelPrecios=nivelPrecios
+        )
+
+        # ========== PASO 2: APLICAR LA POLÍTICA MONETARIA ==========
+        # Si es EXPANSIVA: el Banco Central inyecta dinero (M aumenta)
+        # Si es CONTRACTIVA: el Banco Central retira dinero (M disminuye)
+        if tipoNormalizado == "EXPANSIVA":
+            ofertaMonetariaFinal = ofertaMonetariaInicial + magnitud
+        else:  # CONTRACTIVA
+            ofertaMonetariaFinal = ofertaMonetariaInicial - magnitud
+
+        # ========== PASO 3: CALCULAR NUEVO EQUILIBRIO (DESPUÉS DE LA POLÍTICA) ==========
+        equilibrioFinal = self.equilibrio(
+            consumo=consumo,
+            inversion=inversion,
+            demandaDinero=demandaDinero,
+            gastoPublico=gastoPublico,
+            impuestos=impuestos,
+            ofertaMonetaria=ofertaMonetariaFinal,
+            nivelPrecios=nivelPrecios
+        )
+
+        # ========== PASO 4: CALCULAR LOS CAMBIOS (DELTAS) ==========
+        # Comparamos el equilibrio final con el inicial
+        cambios = {
+            r'$\Delta Y$': equilibrioFinal['Y*'] - equilibrioInicial['Y*'],   # Cambio en PIB
+            r'$\Delta r$': equilibrioFinal['r*'] - equilibrioInicial['r*'],   # Cambio en tasa de interés
+            r'$\Delta C$': equilibrioFinal['C*'] - equilibrioInicial['C*'],   # Cambio en consumo
+            r'$\Delta I$': equilibrioFinal['I*'] - equilibrioInicial['I*'],   # Cambio en inversión
+            r'$\Delta M$': magnitud if tipoNormalizado == "EXPANSIVA" else -magnitud  # Cambio en M
+        }
+
+        # ========== RETORNAR RESULTADOS COMPLETOS ==========
+        return {
+            'tipo': tipoNormalizado,
+            'equilibrioInicial': equilibrioInicial,
+            'equilibrioFinal': equilibrioFinal,
+            'cambios': cambios,
+            # Nota: Política monetaria normalmente NO causa efecto expulsión
+            # (la inversión sube porque r baja en política expansiva)
+            'efectoExpulsion': cambios[r'$\Delta I$'] < 0
+        }
+
+    def politicaFiscal(self,
+                      tipo: str,
+                      magnitud: float,
+                      consumo: str,
+                      inversion: str,
+                      demandaDinero: str,
+                      gastoPublicoInicial: float,
+                      impuestos: float,
+                      ofertaMonetaria: float,
+                      nivelPrecios: float = 1.0) -> Dict[str, any]:
+        """
+        Simula el efecto de una política fiscal en el equilibrio IS-LM.
+
+        GUÍA PARA ECONOMISTAS:
+        Este método te permite ver qué pasa cuando el Gobierno:
+        - EXPANDE el gasto (G↑): construye más carreteras, contrata profesores, etc.
+        - CONTRAE el gasto (G↓): reduce inversión pública, despide funcionarios, etc.
+
+        En el gráfico IS-LM, esto desplaza la curva IS:
+        - Política EXPANSIVA → IS se mueve a la DERECHA → Y↑ y r↑
+        - Política CONTRACTIVA → IS se mueve a la IZQUIERDA → Y↓ y r↓
+
+        EFECTO EXPULSIÓN (Crowding-out):
+        Cuando G↑, el PIB sube (Y↑) pero también sube r↑
+        → Al subir r, la inversión privada (I) cae
+        → El aumento de Y es MENOR que el esperado por el multiplicador
+        Este método detecta automáticamente si hay crowding-out.
+
+        Args:
+            tipo: "EXPANSIVA" (para estimular economía) o "CONTRACTIVA" (para frenarla)
+            magnitud: Cuánto cambia G (ej: 100 = gobierno gasta 100 unidades más)
+            consumo, inversion, demandaDinero: Las ecuaciones de comportamiento
+            gastoPublicoInicial: Cuánto gasta el gobierno ANTES de la política
+            impuestos, ofertaMonetaria: Otras variables (T y M)
+            nivelPrecios: Nivel de precios (normalmente = 1)
+
+        Returns:
+            Diccionario completo con:
+                - 'tipo': EXPANSIVA o CONTRACTIVA
+                - 'equilibrioInicial': Valores ANTES del cambio
+                - 'equilibrioFinal': Valores DESPUÉS del cambio
+                - 'cambios': Los \Delta s (ΔY, Δr, ΔC, ΔI, ΔG)
+                - 'efectoExpulsion': True si I cae cuando G sube (crowding-out)
+                - 'proporcionExpulsion': Qué % del gasto público "expulsa" inversión privada
+
+        Ejemplo:
+            >>> modelo = ISLM()
+            >>> resultado = modelo.politicaFiscal(
+            ...     tipo="EXPANSIVA",
+            ...     magnitud=100,  # Gobierno gasta 100 más
+            ...     consumo="C = 200 + 0.8(Y - 150)",
+            ...     inversion="I = 300 - 20r",
+            ...     demandaDinero="L = 0.2Y - 10r",
+            ...     gastoPublicoInicial=200,
+            ...     impuestos=150,
+            ...     ofertaMonetaria=200
+            ... )
+            >>> if resultado['efectoExpulsion']:
+            ...     print("¡Cuidado! Hay crowding-out")
+            ...     print(f"Por cada $1 que gasta el gobierno, la inversión privada cae ${resultado['proporcionExpulsion']:.2f}")
+        """
+        # Validar que el tipo sea correcto
+        tipoNormalizado = tipo.upper()
+        if tipoNormalizado not in ["EXPANSIVA", "CONTRACTIVA"]:
+            raise ValueError("El tipo debe ser 'EXPANSIVA' o 'CONTRACTIVA'")
+
+        # ========== PASO 1: CALCULAR EQUILIBRIO INICIAL (ANTES DE LA POLÍTICA) ==========
+        equilibrioInicial = self.equilibrio(
+            consumo=consumo,
+            inversion=inversion,
+            demandaDinero=demandaDinero,
+            gastoPublico=gastoPublicoInicial,
+            impuestos=impuestos,
+            ofertaMonetaria=ofertaMonetaria,
+            nivelPrecios=nivelPrecios
+        )
+
+        # ========== PASO 2: APLICAR LA POLÍTICA FISCAL ==========
+        # Si es EXPANSIVA: el gobierno gasta más (G aumenta)
+        # Si es CONTRACTIVA: el gobierno gasta menos (G disminuye)
+        if tipoNormalizado == "EXPANSIVA":
+            gastoPublicoFinal = gastoPublicoInicial + magnitud
+        else:  # CONTRACTIVA
+            gastoPublicoFinal = gastoPublicoInicial - magnitud
+
+        # ========== PASO 3: CALCULAR NUEVO EQUILIBRIO (DESPUÉS DE LA POLÍTICA) ==========
+        equilibrioFinal = self.equilibrio(
+            consumo=consumo,
+            inversion=inversion,
+            demandaDinero=demandaDinero,
+            gastoPublico=gastoPublicoFinal,
+            impuestos=impuestos,
+            ofertaMonetaria=ofertaMonetaria,
+            nivelPrecios=nivelPrecios
+        )
+
+        # ========== PASO 4: CALCULAR LOS CAMBIOS (DELTAS) ==========
+        cambios = {
+            r'$\Delta Y$': equilibrioFinal['Y*'] - equilibrioInicial['Y*'],   # Cambio en PIB
+            r'$\Delta r$': equilibrioFinal['r*'] - equilibrioInicial['r*'],   # Cambio en tasa de interés
+            r'$\Delta C$': equilibrioFinal['C*'] - equilibrioInicial['C*'],   # Cambio en consumo
+            r'$\Delta I$': equilibrioFinal['I*'] - equilibrioInicial['I*'],   # Cambio en inversión
+            r'$\Delta G$': magnitud if tipoNormalizado == "EXPANSIVA" else -magnitud  # Cambio en G
+        }
+
+        # ========== PASO 5: DETECTAR EFECTO EXPULSIÓN (CROWDING-OUT) ==========
+        # Hay efecto expulsión cuando:
+        # - Política EXPANSIVA (G↑) pero la inversión privada CAE (I↓)
+        # - Política CONTRACTIVA (G↓) pero la inversión privada SUBE (I↑)
+        hayEfectoExpulsion = False
+        if tipoNormalizado == "EXPANSIVA" and cambios[r'$\Delta I$'] < 0:
+            # G subió pero I bajó → hay crowding-out
+            hayEfectoExpulsion = True
+        elif tipoNormalizado == "CONTRACTIVA" and cambios[r'$\Delta I$'] > 0:
+            # G bajó pero I subió → hay crowding-out inverso
+            hayEfectoExpulsion = True
+
+        # Calcular qué proporción del gasto público "expulsa" inversión privada
+        # Por ejemplo, si proporcion=0.5, significa que por cada $1 que gasta
+        # el gobierno, la inversión privada cae $0.50
+        if hayEfectoExpulsion and cambios[r'$\Delta G$'] != 0:
+            proporcionExpulsion = abs(cambios[r'$\Delta I$'] / cambios[r'$\Delta G$'])
+        else:
+            proporcionExpulsion = 0
+
+        # ========== RETORNAR RESULTADOS COMPLETOS ==========
+        return {
+            'tipo': tipoNormalizado,
+            'equilibrioInicial': equilibrioInicial,
+            'equilibrioFinal': equilibrioFinal,
+            'cambios': cambios,
+            'efectoExpulsion': hayEfectoExpulsion,
+            'proporcionExpulsion': proporcionExpulsion
+        }
