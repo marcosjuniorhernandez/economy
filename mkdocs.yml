@@ -27,7 +27,7 @@ theme:
 nav:
   - Inicio: index.md
   - Manual de uso: manual.md
-  - Manual de visualización: imgs/manual2.md
+  - Manual de visualización: manual2.md
   - Registro de cambios: changelog.md
   - Contribuciones: contributing.md
 
