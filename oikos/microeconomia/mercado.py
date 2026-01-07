@@ -82,28 +82,44 @@ class Demanda:
     def cantidad(self, precio: float) -> float:
         """
         Calcula la cantidad demandada a un precio dado.
-        
+
         Args:
             precio: Precio del bien (debe ser positivo)
-            
+
         Returns:
             Cantidad demandada
-            
+
         Raises:
-            ErrorValidacion: Si el precio es negativo
+            ErrorValidacion: Si el precio es negativo o si la ecuación no tiene solución real
         """
         precio = validarPositivo(precio, "precio")
-        
+
         # Despejamos Q en función de P
         solucion = solve(self.expresion, self.Q)
-        
+
         if not solucion:
             raise ErrorValidacion("demanda", "No se pudo despejar la cantidad")
-        
+
         # Sustituimos el precio
         cantidadExpresion = solucion[0]
-        cantidad_valor = float(cantidadExpresion.subs(self.P, precio))
-        
+        cantidad_simbolica = cantidadExpresion.subs(self.P, precio)
+
+        # Forzar evaluación numérica y filtrar complejos
+        from sympy import re, im, N
+        cantidad_simbolica = N(cantidad_simbolica)
+
+        # Verificar si tiene parte imaginaria
+        parte_imaginaria = im(cantidad_simbolica)
+        if abs(float(parte_imaginaria)) > 1e-10:
+            raise ErrorValidacion(
+                "demanda",
+                f"La cantidad para P={precio} es un número complejo. "
+                "Esto indica que la ecuación de demanda no es válida para este precio."
+            )
+
+        # Tomar solo la parte real
+        cantidad_valor = float(re(cantidad_simbolica))
+
         # La cantidad no puede ser negativa
         return max(0, cantidad_valor)
     
@@ -111,30 +127,46 @@ class Demanda:
     def precio(self, cantidad: float) -> float:
         """
         Calcula el precio al que se demanda una cantidad específica.
-        
+
         También conocido como "precio de reserva" o "disposición a pagar".
-        
+
         Args:
             cantidad: Cantidad del bien (debe ser no negativa)
-            
+
         Returns:
             Precio correspondiente
-            
+
         Raises:
-            ErrorValidacion: Si la cantidad es negativa
+            ErrorValidacion: Si la cantidad es negativa o si la ecuación no tiene solución real
         """
         cantidad = validarNoNegativo(cantidad, "cantidad")
-        
+
         # Despejamos P en función de Q
         solucion = solve(self.expresion, self.P)
-        
+
         if not solucion:
             raise ErrorValidacion("demanda", "No se pudo despejar el precio")
-        
+
         # Sustituimos la cantidad
         precio_expr = solucion[0]
-        precio_valor = float(precio_expr.subs(self.Q, cantidad))
-        
+        precio_simbolico = precio_expr.subs(self.Q, cantidad)
+
+        # Forzar evaluación numérica y filtrar complejos
+        from sympy import re, im, N
+        precio_simbolico = N(precio_simbolico)
+
+        # Verificar si tiene parte imaginaria
+        parte_imaginaria = im(precio_simbolico)
+        if abs(float(parte_imaginaria)) > 1e-10:
+            raise ErrorValidacion(
+                "demanda",
+                f"El precio para Q={cantidad} es un número complejo. "
+                "Esto indica que la ecuación de demanda no es válida para esta cantidad."
+            )
+
+        # Tomar solo la parte real
+        precio_valor = float(re(precio_simbolico))
+
         return max(0, precio_valor)
     
     @explicacion("""
@@ -288,28 +320,44 @@ class Oferta:
     def cantidad(self, precio: float) -> float:
         """
         Calcula la cantidad ofrecida a un precio dado.
-        
+
         Args:
             precio: Precio del bien (debe ser positivo)
-            
+
         Returns:
             Cantidad ofrecida
-            
+
         Raises:
-            ErrorValidacion: Si el precio es negativo
+            ErrorValidacion: Si el precio es negativo o si la ecuación no tiene solución real
         """
         precio = validarPositivo(precio, "precio")
-        
+
         # Despejamos Q en función de P
         solucion = solve(self.expresion, self.Q)
-        
+
         if not solucion:
             raise ErrorValidacion("oferta", "No se pudo despejar la cantidad")
-        
+
         # Sustituimos el precio
         cantidadExpresion = solucion[0]
-        cantidad_valor = float(cantidadExpresion.subs(self.P, precio))
-        
+        cantidad_simbolica = cantidadExpresion.subs(self.P, precio)
+
+        # Forzar evaluación numérica y filtrar complejos
+        from sympy import re, im, N
+        cantidad_simbolica = N(cantidad_simbolica)
+
+        # Verificar si tiene parte imaginaria
+        parte_imaginaria = im(cantidad_simbolica)
+        if abs(float(parte_imaginaria)) > 1e-10:
+            raise ErrorValidacion(
+                "oferta",
+                f"La cantidad para P={precio} es un número complejo. "
+                "Esto indica que la ecuación de oferta no es válida para este precio."
+            )
+
+        # Tomar solo la parte real
+        cantidad_valor = float(re(cantidad_simbolica))
+
         # La cantidad no puede ser negativa
         return max(0, cantidad_valor)
     
@@ -317,30 +365,46 @@ class Oferta:
     def precio(self, cantidad: float) -> float:
         """
         Calcula el precio al que se ofrece una cantidad específica.
-        
+
         También conocido como "precio mínimo de oferta" o "costo marginal".
-        
+
         Args:
             cantidad: Cantidad del bien (debe ser no negativa)
-            
+
         Returns:
             Precio correspondiente
-            
+
         Raises:
-            ErrorValidacion: Si la cantidad es negativa
+            ErrorValidacion: Si la cantidad es negativa o si la ecuación no tiene solución real
         """
         cantidad = validarNoNegativo(cantidad, "cantidad")
-        
+
         # Despejamos P en función de Q
         solucion = solve(self.expresion, self.P)
-        
+
         if not solucion:
             raise ErrorValidacion("oferta", "No se pudo despejar el precio")
-        
+
         # Sustituimos la cantidad
         precio_expr = solucion[0]
-        precio_valor = float(precio_expr.subs(self.Q, cantidad))
-        
+        precio_simbolico = precio_expr.subs(self.Q, cantidad)
+
+        # Forzar evaluación numérica y filtrar complejos
+        from sympy import re, im, N
+        precio_simbolico = N(precio_simbolico)
+
+        # Verificar si tiene parte imaginaria
+        parte_imaginaria = im(precio_simbolico)
+        if abs(float(parte_imaginaria)) > 1e-10:
+            raise ErrorValidacion(
+                "oferta",
+                f"El precio para Q={cantidad} es un número complejo. "
+                "Esto indica que la ecuación de oferta no es válida para esta cantidad."
+            )
+
+        # Tomar solo la parte real
+        precio_valor = float(re(precio_simbolico))
+
         return max(0, precio_valor)
     
     @explicacion("""
@@ -507,17 +571,46 @@ def equilibrio(oferta: Oferta, demanda: Demanda) -> Dict[str, float]:
     
     # Extraemos la solución única
     solucion = soluciones[0]
-    cantidad_equilibrio = float(solucion[Q])
-    precio_equilibrio = float(solucion[P])
-    
+
+    # Verificar que las soluciones sean números reales
+    cantidad_sym = solucion[Q]
+    precio_sym = solucion[P]
+
+    # Forzar evaluación numérica
+    from sympy import re, im, N
+    cantidad_sym = N(cantidad_sym)
+    precio_sym = N(precio_sym)
+
+    # Verificar si tienen parte imaginaria
+    parte_imaginaria_q = im(cantidad_sym)
+    parte_imaginaria_p = im(precio_sym)
+
+    if abs(float(parte_imaginaria_q)) > 1e-10:
+        raise ErrorEquilibrio(
+            "El equilibrio calculado tiene una cantidad compleja. "
+            "Las curvas de oferta y demanda no se cruzan en un punto real. "
+            "Verifica las ecuaciones."
+        )
+
+    if abs(float(parte_imaginaria_p)) > 1e-10:
+        raise ErrorEquilibrio(
+            "El equilibrio calculado tiene un precio complejo. "
+            "Las curvas de oferta y demanda no se cruzan en un punto real. "
+            "Verifica las ecuaciones."
+        )
+
+    # Tomar solo las partes reales
+    cantidad_equilibrio = float(re(cantidad_sym))
+    precio_equilibrio = float(re(precio_sym))
+
     # Validamos que sean valores positivos
     if cantidad_equilibrio < 0 or precio_equilibrio < 0:
         raise ErrorEquilibrio(
             f"El equilibrio calculado tiene valores negativos: "
-            f"P* = {precio_equilibrio}, Q* = {cantidad_equilibrio}. "
+            f"P* = {precio_equilibrio:.4f}, Q* = {cantidad_equilibrio:.4f}. "
             f"Verifica las ecuaciones de oferta y demanda."
         )
-    
+
     return {
         'P*': precio_equilibrio,
         'Q*': cantidad_equilibrio

@@ -74,21 +74,11 @@ def translatex(expresionLatex: str, variableDespejar: Optional[str] = None):
                 # Retornamos la primera solución
                 return solucion[0] if len(solucion) == 1 else solucion
             
-            # Si no especificó, intentamos detectar automáticamente
-            # Regla: la variable del lado izquierdo es la dependiente
-            variablesIzq = list(izq.free_symbols)
-            
-            if len(variablesIzq) == 1:
-                # Hay una sola variable a la izquierda, la despejamos
-                variable = variablesIzq[0]
-                ecuacion = Eq(izq, der)
-                solucion = solve(ecuacion, variable)
-                
-                if solucion:
-                    return solucion[0] if len(solucion) == 1 else solucion
-            
-            # Si no pudimos despejar, retornamos la diferencia (para resolver sistemas)
-            return izq - der
+            # IMPORTANTE: NO despejamos automáticamente
+            # Las clases Demanda/Oferta necesitan la ecuación completa para poder
+            # despejar P o Q según lo necesiten
+            # Retornamos siempre la ecuación completa como Eq(izq, der)
+            return Eq(izq, der)
         
         else:
             # No hay igualdad, solo parseamos la expresión

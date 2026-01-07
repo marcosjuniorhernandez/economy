@@ -12,9 +12,10 @@ __pycache__/
 # Entornos virtuales
 venv/
 .venv/
+.env
 env/
 
 # Notas personales
-.env
 notes/
 .claude/
+pruebas/

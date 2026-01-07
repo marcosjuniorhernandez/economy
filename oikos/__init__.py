@@ -132,20 +132,9 @@ def info():
     ║            Librería para Economía en Python                      ║
     ╚══════════════════════════════════════════════════════════════════╝
     
-    📚 Módulos disponibles:
-       • microeconomia: Demanda, Oferta, Equilibrio
-       • macroeconomia: IS-LM, OA-DA (próximamente)
-       • utilidades: Gráficos, Parser, Validadores
-    
-    🎨 Colores predefinidos:
-       ROJO, AZUL, VERDE, AMARILLO, NARANJA, MORADO, TURQUESA, ROSA
-    
-    💡 Ejemplo rápido:
-       >>> import oikos as ok
-       >>> demanda = ok.Demanda("Q = 100 - 2P")
-       >>> oferta = ok.Oferta("Q = -20 + 3P")
-       >>> eq = ok.equilibrio(oferta, demanda)
-       >>> ok.escribir(eq, "Equilibrio")
-    
-    📖 Documentación: https://oikos.readthedocs.io/en/latest/manual/
+    Módulos disponibles:
+       • Microeconomia: Demanda, Oferta, Equilibrio
+       • Macroeconomia: IS-LM, OA-DA (próximamente)
+            
+    Documentación: https://oikos.readthedocs.io/en/latest/manual/
     """)

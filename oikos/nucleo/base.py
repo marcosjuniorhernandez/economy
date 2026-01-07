@@ -45,8 +45,8 @@ class ModeloEconomico(ABC):
     
     def __repr__(self):
         """Representación del modelo."""
-        nombre_clase = self.__class__.__name__
-        return f"{nombre_clase}(variables={list(self.variables.keys())})"
+        nombreClase = self.__class__.__name__
+        return f"{nombreClase}(variables={list(self.variables.keys())})"
 
 
 class FuncionEconomica(ABC):

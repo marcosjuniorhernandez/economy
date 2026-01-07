@@ -549,7 +549,10 @@ class Lienzo:
     
     def _configurarEjes(self):
         """Configura las etiquetas y rangos de los ejes."""
-        # Etiquetas
+        # Desactivar LaTeX en matplotlib
+        plt.rcParams['text.usetex'] = False
+
+        # Etiquetas (sin LaTeX)
         self.ax.set_xlabel(
             self.etiquetaX,
             fontsize=self.estilo.dimensionLabel,
@@ -560,7 +563,7 @@ class Lienzo:
             fontsize=self.estilo.dimensionLabel,
             fontweight='bold'
         )
-        
+
         # Título
         if self.titulo:
             self.ax.set_title(
@@ -569,13 +572,13 @@ class Lienzo:
                 fontweight='bold',
                 pad=20
             )
-        
+
         # Rangos
         if self.rangoX:
             self.ax.set_xlim(self.rangoX)
         if self.rangoY:
             self.ax.set_ylim(self.rangoY)
-        
+
         # Dimensión de ticks
         self.ax.tick_params(labelsize=self.estilo.dimensionTick)
     
@@ -687,31 +690,65 @@ class Lienzo:
     
     def _evaluarObjetoOikos(self, obj, valores_x):
         """Evalúa un objeto de oikos en los valores de x."""
-        from sympy import lambdify, Symbol
-        
+        import numpy as np
+
         # Intentar diferentes métodos comunes
         if hasattr(obj, 'cantidad') and callable(obj.cantidad):
-            return [obj.cantidad(x) for x in valores_x]
+            valores_y = []
+            for x in valores_x:
+                try:
+                    y = obj.cantidad(x)
+                    # Asegurar que sea real
+                    if isinstance(y, complex):
+                        y = y.real
+                    valores_y.append(y)
+                except Exception:
+                    valores_y.append(np.nan)
+            return np.array(valores_y)
+
         elif hasattr(obj, 'precio') and callable(obj.precio):
-            return [obj.precio(x) for x in valores_x]
-        
+            valores_y = []
+            for x in valores_x:
+                try:
+                    y = obj.precio(x)
+                    # Asegurar que sea real
+                    if isinstance(y, complex):
+                        y = y.real
+                    valores_y.append(y)
+                except Exception:
+                    valores_y.append(np.nan)
+            return np.array(valores_y)
+
         # Si tiene expresión simbólica, convertirla a función
         if hasattr(obj, 'expresion'):
             try:
-                from sympy import symbols
+                from sympy import lambdify
                 var = list(obj.expresion.free_symbols)[0]
                 func = lambdify(var, obj.expresion, 'numpy')
-                return func(valores_x)
+                valores_y = func(valores_x)
+                # Asegurar que sean reales
+                if np.iscomplexobj(valores_y):
+                    valores_y = np.real(valores_y)
+                return valores_y
             except (IndexError, AttributeError, TypeError):
                 pass
 
         # Si tiene __call__, intentar usarlo
         if hasattr(obj, '__call__') and not isinstance(obj, type):
             try:
-                return [obj(x) for x in valores_x]
+                valores_y = []
+                for x in valores_x:
+                    try:
+                        y = obj(x)
+                        if isinstance(y, complex):
+                            y = y.real
+                        valores_y.append(y)
+                    except Exception:
+                        valores_y.append(np.nan)
+                return np.array(valores_y)
             except (TypeError, ValueError):
                 pass
-        
+
         raise ValueError(
             f"No se pudo evaluar el objeto oikos: {type(obj)}. "
             f"Asegúrate de que tenga un método .cantidad(p), .precio(q) o una expresión evaluable."
@@ -719,12 +756,24 @@ class Lienzo:
     
     def _evaluarFuncion(self, funcion, valores_x):
         """Evalúa cualquier tipo de función."""
+        import numpy as np
+
         if funcion is None:
             return 0
         elif hasattr(funcion, '__module__') and 'oikos' in str(funcion.__module__):
             return self._evaluarObjetoOikos(funcion, valores_x)
         elif callable(funcion):
-            return [funcion(x) for x in valores_x]
+            valores_y = []
+            for x in valores_x:
+                try:
+                    y = funcion(x)
+                    # Asegurar que sea real
+                    if isinstance(y, complex):
+                        y = y.real
+                    valores_y.append(y)
+                except Exception:
+                    valores_y.append(np.nan)
+            return np.array(valores_y)
         else:
             return funcion
     
@@ -746,25 +795,45 @@ class Lienzo:
 def graficoRapido(*funciones, **kwargs):
     """
     Función rápida para graficar múltiples funciones.
-    
+
     Args:
-        *funciones: Una o más funciones a graficar
-        **kwargs: Opciones de configuración (titulo, etiquetaX, etiquetaY, etc.)
-        
+        *funciones: Una o más funciones a graficar. Acepta:
+                   - Objetos de oikos (Demanda, Oferta, etc.)
+                   - Tuplas (x, y) de arrays
+                   - Si el primer argumento es un array y el segundo es una lista de arrays,
+                     se interpreta como (x, [y1, y2, ...])
+        **kwargs: Opciones de configuración
+                 - titulo: Título del gráfico
+                 - etiquetaX: Etiqueta del eje X
+                 - etiquetaY: Etiqueta del eje Y
+                 - leyendas: Lista de etiquetas para las curvas
+                 - colores: Lista de colores para las curvas
+
     Returns:
         Lienzo configurado y graficado
-        
+
     Ejemplo:
+        >>> # Con objetos de oikos
         >>> graficoRapido(
         ...     demanda, oferta,
         ...     titulo="Mi Mercado",
         ...     etiquetaX="Cantidad",
         ...     etiquetaY="Precio"
         ... )
+        >>>
+        >>> # Con arrays numpy
+        >>> x = np.linspace(0, 10, 100)
+        >>> y1 = 100 - 2*x
+        >>> y2 = -20 + 3*x
+        >>> graficoRapido(
+        ...     x, [y1, y2],
+        ...     titulo="Oferta y Demanda",
+        ...     leyendas=["Demanda", "Oferta"]
+        ... )
     """
-    
+
     lienzo = Lienzo()
-    
+
     # Configurar opciones
     if 'titulo' in kwargs:
         lienzo.titulo = kwargs['titulo']
@@ -772,10 +841,35 @@ def graficoRapido(*funciones, **kwargs):
         lienzo.etiquetaX = kwargs['etiquetaX']
     if 'etiquetaY' in kwargs:
         lienzo.etiquetaY = kwargs['etiquetaY']
-    
-    # Añadir funciones
-    for funcion in funciones:
-        lienzo.agregar(funcion)
-    
+
+    # Extraer configuraciones opcionales
+    leyendas = kwargs.get('leyendas', [])
+    colores = kwargs.get('colores', [])
+
+    # Caso especial: graficoRapido(x, [y1, y2, ...], ...)
+    if len(funciones) == 2 and hasattr(funciones[0], '__iter__') and hasattr(funciones[1], '__iter__'):
+        # Verificar si el segundo argumento es una lista de arrays
+        try:
+            import numpy as np
+            x_vals = funciones[0]
+            y_vals = funciones[1]
+
+            # Si y_vals es una lista/array de arrays
+            if isinstance(y_vals, (list, tuple)):
+                for i, y in enumerate(y_vals):
+                    etiqueta = leyendas[i] if i < len(leyendas) else None
+                    color = colores[i] if i < len(colores) else None
+                    lienzo.agregar((x_vals, y), etiqueta=etiqueta, color=color)
+                lienzo.graficar()
+                return lienzo
+        except (TypeError, IndexError, AttributeError):
+            pass  # Si falla, continuar con el procesamiento normal
+
+    # Procesamiento normal: cada argumento es una función independiente
+    for i, funcion in enumerate(funciones):
+        etiqueta = leyendas[i] if i < len(leyendas) else None
+        color = colores[i] if i < len(colores) else None
+        lienzo.agregar(funcion, etiqueta=etiqueta, color=color)
+
     lienzo.graficar()
     return lienzo

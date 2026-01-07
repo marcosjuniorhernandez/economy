@@ -19,10 +19,10 @@ from ..utilidades.decoradores import ayuda, explicacion
     en una economía cerrada. Combina:
     
     - Curva IS: Equilibrio en el mercado de bienes (Y = C + I + G)
-    - Curva LM: Equilibrio en el mercado de dinero (M/P = L(Y, r))
+    - Curva LM: Equilibrio en el mercado de dinero (M/P = L(Y, i))
     
     El modelo permite analizar los efectos de políticas fiscales y monetarias
-    sobre el producto (Y) y la tasa de interés (r).
+    sobre el producto (Y) y la tasa de interés (i).
     """,
     supuestos=[
         "Economía cerrada (sin sector externo)",
@@ -37,6 +37,7 @@ from ..utilidades.decoradores import ayuda, explicacion
         "Política Económica"
     ]
 )
+
 class ISLM(ModeloEconomico):
     """
     Modelo IS-LM de equilibrio macroeconómico.
@@ -48,12 +49,12 @@ class ISLM(ModeloEconomico):
     Ejemplo:
         >>> modelo = ISLM()
         >>> resultados = modelo.equilibrio(
-        ...     consumo="C = 200 + 0.8(Y - T)",
-        ...     inversion="I = 1000 - 50r",
-        ...     demandaDinero="L = 0.25Y - 50r",
-        ...     gastoPublico=900,
-        ...     impuestos=800,
-        ...     ofertaMonetaria=3400,
+        ...     consumo="C = 100 + 0.8(Y - T)",
+        ...     inversion="I = 300 - 20r",
+        ...     demandaDinero="L = 0.2Y - 10r",
+        ...     gastoPublico=200,
+        ...     impuestos=150,
+        ...     ofertaMonetaria=200,
         ...     nivelPrecios=1
         ... )
         >>> escribir(resultados, "Equilibrio IS-LM")
@@ -65,7 +66,7 @@ class ISLM(ModeloEconomico):
         
         # Definir símbolos económicos
         self.Y = symbols('Y')      # Producto/Ingreso
-        self.r = symbols('r')      # Tasa de interés
+        self.i = symbols('i')      # Tasa de interés
         self.C = symbols('C')      # Consumo
         self.I = symbols('I')      # Inversión
         self.G = symbols('G')      # Gasto público
@@ -104,7 +105,7 @@ class ISLM(ModeloEconomico):
         Returns:
             Diccionario con:
                 - 'Y*': Producto de equilibrio
-                - 'r*': Tasa de interés de equilibrio
+                - 'i*': Tasa de interés de equilibrio
                 - 'multiplicador_fiscal': ∂Y/∂G
                 - 'multiplicador_monetario': ∂Y/∂M
                 - 'C*': Consumo de equilibrio
@@ -114,22 +115,40 @@ class ISLM(ModeloEconomico):
             ErrorEquilibrio: Si no se puede resolver el sistema
         """
         # 1. Parsear las funciones de comportamiento
-        C_expr = translatex(consumo)
-        I_expr = translatex(inversion)
-        L_expr = translatex(demandaDinero)
-        
+        C_eq = translatex(consumo)
+        I_eq = translatex(inversion)
+        L_eq = translatex(demandaDinero)
+
+        # Extraer lado derecho de las ecuaciones (rhs = right hand side)
+        C_expr = C_eq.rhs if hasattr(C_eq, 'rhs') else C_eq
+        I_expr = I_eq.rhs if hasattr(I_eq, 'rhs') else I_eq
+        L_expr = L_eq.rhs if hasattr(L_eq, 'rhs') else L_eq
+
+        # Sustituir notaciones alternativas de tasa de interés por 'i'
+        # Esto permite que el usuario use 'r', 'rho', 'rate', etc.
+        for expr in [C_expr, I_expr, L_expr]:
+            simbolos = expr.free_symbols
+            for s in simbolos:
+                nombre = str(s)
+                # Si encuentra 'r', 'rho', 'rate' o similar, lo sustituye por 'i'
+                if nombre.lower() in ['r', 'rho', 'rate']:
+                    if s == symbols('r'):
+                        C_expr = C_expr.subs(s, self.i)
+                        I_expr = I_expr.subs(s, self.i)
+                        L_expr = L_expr.subs(s, self.i)
+
         # 2. Definir condiciones de equilibrio
         # IS: Y = C + I + G
         ecuacionIS = self.Y - C_expr - I_expr - self.G
-        
-        # LM: M/P = L(Y, r)
+
+        # LM: M/P = L(Y, i)
         ecuacionLM = L_expr - (self.M / self.P)
         
         # 3. Resolver sistema simbólicamente (para multiplicadores)
         try:
             solucion_simbolica = solve(
                 [ecuacionIS, ecuacionLM],
-                (self.Y, self.r)
+                (self.Y, self.i)
             )
         except Exception as e:
             raise ErrorEquilibrio(f"No se pudo resolver el sistema IS-LM: {str(e)}")
@@ -138,7 +157,7 @@ class ISLM(ModeloEconomico):
             raise ErrorEquilibrio("No existe equilibrio IS-LM para estos parámetros")
         
         Y_estrella_expr = solucion_simbolica[self.Y]
-        r_estrella_expr = solucion_simbolica[self.r]
+        i_estrella_expr = solucion_simbolica[self.i]
         
         # 4. Calcular multiplicadores
         multiplicadorFiscal = diff(Y_estrella_expr, self.G)
@@ -153,15 +172,15 @@ class ISLM(ModeloEconomico):
         }
         
         Y_equilibrio = float(Y_estrella_expr.subs(valores))
-        r_equilibrio = float(r_estrella_expr.subs(valores))
+        i_equilibrio = float(i_estrella_expr.subs(valores))
         
         # 6. Calcular C* e I* de equilibrio
-        C_equilibrio = float(C_expr.subs({**valores, self.Y: Y_equilibrio, self.r: r_equilibrio}))
-        I_equilibrio = float(I_expr.subs({**valores, self.Y: Y_equilibrio, self.r: r_equilibrio}))
+        C_equilibrio = float(C_expr.subs({**valores, self.Y: Y_equilibrio, self.i: i_equilibrio}))
+        I_equilibrio = float(I_expr.subs({**valores, self.Y: Y_equilibrio, self.i: i_equilibrio}))
         
         return {
             'Y*': Y_equilibrio,
-            'r*': r_equilibrio,
+            'r*': i_equilibrio,
             'k': float(multiplicadorFiscal.subs(valores)),
             'm': float(multiplicadorMonetario.subs(valores)),
             'C*': C_equilibrio,
@@ -176,11 +195,11 @@ class ISLM(ModeloEconomico):
     def explicar(self) -> str:
         """Explicación del modelo IS-LM."""
         return """
-        El modelo IS-LM muestra cómo se determina el ingreso (Y) y la tasa de interés (r)
+        El modelo IS-LM muestra cómo se determina el ingreso (Y) y la tasa de interés (i)
         en el corto plazo cuando los precios son rígidos.
         
-        - La curva IS representa combinaciones de (Y, r) donde el mercado de bienes está en equilibrio
-        - La curva LM representa combinaciones de (Y, r) donde el mercado de dinero está en equilibrio
+        - La curva IS representa combinaciones de (Y, i) donde el mercado de bienes está en equilibrio
+        - La curva LM representa combinaciones de (Y, i) donde el mercado de dinero está en equilibrio
         - El equilibrio ocurre donde se cruzan ambas curvas
         
         Política Fiscal Expansiva (↑G):
