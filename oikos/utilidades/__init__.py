@@ -16,14 +16,19 @@ from .visuales import (
     Lienzo,
     EstiloGrafico,
     graficoRapido,
-    # Colores predefinidos
-    ROJO, AZUL, VERDE, AMARILLO, NARANJA, MORADO, TURQUESA, ROSA
+    # Colores predefinidos - Ahora disponibles sin prefijo
+    ROJO, AZUL, VERDE, AMARILLO, CIAN, MAGENTA,
+    NARANJA, MORADO, ROSA, LIMA,
+    TURQUESA, CELESTE, VIOLETA, CORAL,
+    ROJO2, AZUL2, VERDE2, AMARILLO2,
+    GRIS, NEGRO,
+    COLOR_DEMANDA, COLOR_OFERTA
 )
 from .decoradores import (
     ayuda,
     explicacion,
     validarEconomico,
-    memoizarResultado,
+    memorizarResultado,
     deprecado
 )
 
@@ -46,12 +51,19 @@ __all__ = [
     'Lienzo',
     'EstiloGrafico',
     'graficoRapido',
-    'ROJO', 'AZUL', 'VERDE', 'AMARILLO', 'NARANJA', 'MORADO', 'TURQUESA', 'ROSA',
+
+    # Colores - Todos exportados para uso directo
+    'ROJO', 'AZUL', 'VERDE', 'AMARILLO', 'CIAN', 'MAGENTA',
+    'NARANJA', 'MORADO', 'ROSA', 'LIMA',
+    'TURQUESA', 'CELESTE', 'VIOLETA', 'CORAL',
+    'ROJO2', 'AZUL2', 'VERDE2', 'AMARILLO2',
+    'GRIS', 'NEGRO',
+    'COLOR_DEMANDA', 'COLOR_OFERTA',
 
     # Decoradores
     'ayuda',
     'explicacion',
     'validarEconomico',
-    'memoizarResultado',
+    'memorizarResultado',
     'deprecado'
 ]

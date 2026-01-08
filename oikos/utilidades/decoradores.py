@@ -50,17 +50,17 @@ def ayuda(descripcion_economica: str,
 """
         
         if supuestos:
-            doc_economica += "\n🔍 SUPUESTOS DEL MODELO:\n"
+            doc_economica += "\n SUPUESTOS DEL MODELO:\n"
             for i, supuesto in enumerate(supuestos, 1):
                 doc_economica += f"   {i}. {supuesto}\n"
         
         if cursos:
-            doc_economica += "\n🎓 USADO EN:\n"
+            doc_economica += "\n USADO EN:\n"
             for curso in cursos:
                 doc_economica += f"   • {curso}\n"
         
         if ejemplos:
-            doc_economica += f"\n💡 EJEMPLO DE USO:\n{ejemplos}\n"
+            doc_economica += f"\n EJEMPLO DE USO:\n{ejemplos}\n"
         
         doc_economica += "\n" + "─" * 66 + "\n"
         
@@ -106,7 +106,7 @@ def explicacion(texto_explicativo: str):
             return func(*args, **kwargs)
         
         # Añadir explicación al docstring
-        explicacion_doc = f"\n{'─'*50}\n📖 EXPLICACIÓN ECONÓMICA:\n{texto_explicativo}\n{'─'*50}\n"
+        explicacion_doc = f"\n{'─'*50}\n EXPLICACIÓN ECONÓMICA:\n{texto_explicativo}\n{'─'*50}\n"
         
         if func.__doc__:
             envoltura.__doc__ = explicacion_doc + func.__doc__
@@ -177,14 +177,14 @@ def validarEconomico(**validaciones):
     return decorador
 
 
-def memoizarResultado(func):
+def memorizarResultado(func):
     """
     Decorador que cachea el resultado de funciones económicas costosas.
     
     Útil para equilibrios que se calculan múltiples veces.
     
     Ejemplo:
-        >>> @memoizar_resultado
+        >>> @memorizar_resultado
         ... def calcular_equilibrio(a, b, c):
         ...     # Cálculo costoso...
         ...     return resultado

@@ -16,16 +16,39 @@ from dataclasses import dataclass, field
 
 
 # ============= COLORES PREDEFINIDOS =============
-# Puedes usar estos colores directamente: escribir(..., color=ROJO)
+# Puedes usar estos colores directamente sin el prefijo 'ok.'
+# Ejemplo: lienzo.agregar(demanda, color=ROJO)
 
-ROJO = '#E63946'
-AZUL = '#1D3557'
-VERDE = '#2A9D8F'
-AMARILLO = '#F4A261'
-NARANJA = '#E76F51'
-MORADO = '#6A4C93'
-TURQUESA = '#06AED5'
-ROSA = '#FF006E'
+# COLORES PUROS
+ROJO     = "#FF0000"
+AZUL     = "#0000FF"
+VERDE    = "#00FF00"
+AMARILLO = "#FFFF00"
+CIAN     = "#00FFFF"
+MAGENTA  = "#FF00FF"
+
+NARANJA  = "#FF7F00"
+MORADO   = "#8000FF"
+ROSA     = "#FF1493"
+LIMA     = "#32FF00"
+
+# COLORES SUAVES
+TURQUESA = "#00BFFF"
+CELESTE  = "#1E90FF"
+VIOLETA  = "#9400D3"
+CORAL    = "#FF4040"
+
+ROJO2    = "#FF3333"
+AZUL2    = "#0066FF"
+VERDE2   = "#00CC66"
+AMARILLO2= "#FFD700"
+
+GRIS     = "#666666"
+NEGRO    = "#000000"
+
+# COLORES POR DEFECTO PARA ECONOMÍA
+COLOR_DEMANDA = ROJO   # Rojo para demanda
+COLOR_OFERTA = VERDE2  # Verde para oferta
 
 
 def escribir(diccionarioResultados: dict, titulo: Optional[str] = None):
@@ -120,14 +143,32 @@ class EstiloGrafico:
 
     # Paleta de colores VIVOS (nueva para v0.3.0)
     paletaColores: List[str] = field(default_factory=lambda: [
-        '#E63946',  # Rojo vibrante
-        '#1D3557',  # Azul marino profundo
-        '#2A9D8F',  # Verde turquesa
-        '#F4A261',  # Naranja cálido
-        '#E76F51',  # Coral
-        '#6A4C93',  # Púrpura
-        '#06AED5',  # Cyan brillante
-        '#FF006E',  # Rosa magenta
+        # COLORES PUROS
+        "#FF0000",  # ROJO
+        "#0000FF",  # AZUL
+        "#00FF00",  # VERDE
+        "#FFFF00",  # AMARILLO
+        "#00FFFF",  # CIAN
+        "#FF00FF",  # MAGENTA
+
+        "#FF7F00",  # NARANJA
+        "#8000FF",  # MORADO
+        "#FF1493",  # ROSA
+        "#32FF00",  # LIMA
+
+        # COLORES SUAVES
+        "#00BFFF",  # TURQUESA
+        "#1E90FF",  # CELESTE
+        "#9400D3",  # VIOLETA
+        "#FF4040",  # CORAL
+
+        "#FF3333",  # ROJO2
+        "#0066FF",  # AZUL2
+        "#00CC66",  # VERDE2
+        "#FFD700",  # AMARILLO2
+
+        "#666666",  # GRIS
+        "#000000"   # NEGRO
     ])
 
     # Estilo de líneas
@@ -197,8 +238,8 @@ class Lienzo:
 
         >>> # Crear gráfico matricial (estilo económico clásico)
         >>> lienzo = Lienzo(matriz=(2, 2), dimensionMatriz=(18, 12))
-        >>> # Usar vista(fila, columna) para seleccionar posición
-        >>> lienzo.vista(1, 2)  # Fila 1, Columna 2
+        >>> # Usar cuadrante(fila, columna) para seleccionar posición
+        >>> lienzo.cuadrante(1, 2)  # Fila 1, Columna 2
         >>> lienzo.configurarEtiquetas(titulo="Cruz Keynesiana")
         >>> # ... agregar curvas ...
     """
@@ -209,13 +250,16 @@ class Lienzo:
                  relacionAspecto: str = "auto",
                  matriz: Optional[Tuple[int, int]] = None,
                  dimensionMatriz: Optional[Tuple[int, int]] = None,
-                 alinearEjes: bool = False):
+                 alinearEjes: bool = False,
+                 mostrarLeyenda: bool = False):
         """
         Inicializa un lienzo para gráficos económicos.
 
         Args:
-            alinearEjes: Si True, alinea los ejes compartidos entre vistas (útil para IS-LM)
+            alinearEjes: Si True, alinea los ejes compartidos entre cuadrantes (útil para IS-LM)
+            mostrarLeyenda: Si True, muestra la leyenda. Por defecto False para gráficos económicos limpios
         """
+        
         self.estilo = estilo or EstiloGrafico()
         self.cuadrantes = cuadrantes
         self.relacionAspecto = relacionAspecto
@@ -224,14 +268,15 @@ class Lienzo:
         self.matriz = matriz
         self.dimensionMatriz = dimensionMatriz
         self.alinearEjes = alinearEjes
+        self.mostrarLeyenda = mostrarLeyenda
 
         self.fig = None
         self.ax = None
-        self.axes = None  # Array de vistas si es matricial
-        self._vista_actual = None  # Para saber en qué vista estamos trabajando
+        self.axes = None  # Array de cuadrantes si es matricial
+        self._cuadrante_actual = None  # Para saber en qué cuadrante estamos trabajando
 
         self._funciones = []  # Lista de funciones a graficar
-        self._funciones_por_vista = {}  # Diccionario {(fila, col): [funciones]}
+        self._funciones_por_cuadrante = {}  # Diccionario {(fila, col): [funciones]}
         self._indiceColor = 0
 
         # Configuración de ejes
@@ -247,25 +292,27 @@ class Lienzo:
         self.pasoX = None
         self.pasoY = None
     
-    def vista(self, fila: int, columna: int):
+    def cuadrante(self, fila: int, columna: int, alinearX: str = None, alinearY: str = None):
         """
-        Selecciona una vista específica en una matriz para trabajar.
+        Selecciona una cuadrante específica en una matriz para trabajar.
 
         Args:
             fila: Índice de fila (1-indexed, comienza desde 1)
             columna: Índice de columna (1-indexed, comienza desde 1)
+            alinearX: Alinear eje X con cuadrante en: 'arriba', 'abajo'. Valida posición automáticamente
+            alinearY: Alinear eje Y con cuadrante en: 'izquierda', 'derecha'. Valida posición automáticamente
 
         Returns:
             self (para encadenar métodos)
 
         Ejemplo:
             >>> lienzo = Lienzo(matriz=(2, 2))
-            >>> lienzo.vista(1, 2)  # Selecciona fila 1, columna 2
+            >>> lienzo.cuadrante(1, 2, alinearY='izquierda')  # Solo si está a la izquierda
             >>> lienzo.configurarEtiquetas(titulo="Cruz Keynesiana")
             >>> lienzo.agregar(funcion1)
         """
         if not self.matriz:
-            raise ValueError("Este lienzo no tiene una matriz de vistas. Usa matriz=(filas, cols) al crear el Lienzo.")
+            raise ValueError("Este lienzo no tiene una matriz de cuadrantes. Usa matriz=(filas, cols) al crear el Lienzo.")
 
         # Convertir de 1-indexed a 0-indexed
         fila_idx = fila - 1
@@ -277,9 +324,31 @@ class Lienzo:
         if columna < 1 or columna > self.matriz[1]:
             raise ValueError(f"Columna {columna} fuera de rango. Debe estar entre 1 y {self.matriz[1]}.")
 
-        self._vista_actual = (fila_idx, columna_idx)
+        # Validar alineación de ejes según posición
+        alinear_x_validado = None
+        alinear_y_validado = None
 
-        # Resetear configuraciones para esta vista
+        if alinearX:
+            if alinearX == 'arriba' and fila == 1:
+                alinear_x_validado = 'arriba'
+            elif alinearX == 'abajo' and fila == self.matriz[0]:
+                alinear_x_validado = 'abajo'
+            elif alinearX in ['arriba', 'abajo']:
+                # No está en la posición correcta, ignorar alineación
+                pass
+
+        if alinearY:
+            if alinearY == 'izquierda' and columna == 1:
+                alinear_y_validado = 'izquierda'
+            elif alinearY == 'derecha' and columna == self.matriz[1]:
+                alinear_y_validado = 'derecha'
+            elif alinearY in ['izquierda', 'derecha']:
+                # No está en la posición correcta, ignorar alineación
+                pass
+
+        self._cuadrante_actual = (fila_idx, columna_idx)
+
+        # Resetear configuraciones para esta cuadrante
         self.etiquetaX = "x"
         self.etiquetaY = "y"
         self.titulo = ""
@@ -288,9 +357,9 @@ class Lienzo:
         self.pasoX = None
         self.pasoY = None
 
-        # Inicializar lista de funciones para esta vista si no existe
-        if self._vista_actual not in self._funciones_por_vista:
-            self._funciones_por_vista[self._vista_actual] = {
+        # Inicializar lista de funciones para esta cuadrante si no existe
+        if self._cuadrante_actual not in self._funciones_por_cuadrante:
+            self._funciones_por_cuadrante[self._cuadrante_actual] = {
                 'funciones': [],
                 'etiquetaX': 'x',
                 'etiquetaY': 'y',
@@ -299,8 +368,14 @@ class Lienzo:
                 'rangoY': None,
                 'pasoX': None,
                 'pasoY': None,
-                'indiceColor': 0
+                'indiceColor': 0,
+                'alinearX': alinear_x_validado,
+                'alinearY': alinear_y_validado
             }
+        else:
+            # Actualizar alineación si ya existe
+            self._funciones_por_cuadrante[self._cuadrante_actual]['alinearX'] = alinear_x_validado
+            self._funciones_por_cuadrante[self._cuadrante_actual]['alinearY'] = alinear_y_validado
 
         return self
 
@@ -326,14 +401,14 @@ class Lienzo:
         if titulo:
             self.titulo = titulo
 
-        # Si estamos en modo matricial, guardar configuración para la vista actual
-        if self.matriz and self._vista_actual:
+        # Si estamos en modo matricial, guardar configuración para la cuadrante actual
+        if self.matriz and self._cuadrante_actual:
             if etiquetaX:
-                self._funciones_por_vista[self._vista_actual]['etiquetaX'] = etiquetaX
+                self._funciones_por_cuadrante[self._cuadrante_actual]['etiquetaX'] = etiquetaX
             if etiquetaY:
-                self._funciones_por_vista[self._vista_actual]['etiquetaY'] = etiquetaY
+                self._funciones_por_cuadrante[self._cuadrante_actual]['etiquetaY'] = etiquetaY
             if titulo:
-                self._funciones_por_vista[self._vista_actual]['titulo'] = titulo
+                self._funciones_por_cuadrante[self._cuadrante_actual]['titulo'] = titulo
 
         return self
     
@@ -385,7 +460,8 @@ class Lienzo:
                     - Función callable: lambda x: x**2
                     - Tupla de arrays: (valores_x, valores_y)
             etiqueta: Texto para la leyenda
-            color: Color de la curva (hex o nombre)
+            color: Color de la curva (hex o nombre). Si no se especifica, se detecta automáticamente:
+                   ROJO para Demanda, VERDE para Oferta, colores de paleta para otros
             anchoLinea: Grosor de la línea
             estiloLinea: '-' (sólida), '--' (guiones), ':' (puntos)
             rangoPersonalizado: Rango específico para esta función
@@ -394,19 +470,37 @@ class Lienzo:
             self (para encadenar métodos)
 
         Ejemplo:
-            >>> lienzo.agregar(demanda, etiqueta="Demanda", color=ROJO)
-            >>> lienzo.agregar(lambda q: 20 + 0.5*q, etiqueta="Oferta", color=AZUL)
+            >>> lienzo.agregar(demanda, etiqueta="Demanda")  # Color ROJO automático
+            >>> lienzo.agregar(oferta, etiqueta="Oferta")     # Color VERDE automático
+            >>> lienzo.agregar(lambda q: 20 + 0.5*q, etiqueta="Otra", color=AZUL)
         """
         # Auto-detectar si es un objeto de oikos
         es_objeto_oikos = hasattr(funcion, '__module__') and 'oikos' in str(funcion.__module__)
 
-        # Si estamos en modo matricial, usar el índice de color de la vista actual
-        if self.matriz and self._vista_actual:
-            vista_info = self._funciones_por_vista[self._vista_actual]
-            color_final = color or self.estilo.paletaColores[vista_info['indiceColor'] % len(self.estilo.paletaColores)]
-            vista_info['indiceColor'] += 1
+        # Detectar tipo de función para color automático
+        tipo_funcion = None
+        if es_objeto_oikos:
+            nombre_clase = funcion.__class__.__name__
+            if 'Demanda' in nombre_clase:
+                tipo_funcion = 'demanda'
+            elif 'Oferta' in nombre_clase:
+                tipo_funcion = 'oferta'
+
+        # Determinar color final
+        if color:
+            color_final = color
+        elif tipo_funcion == 'demanda':
+            color_final = COLOR_DEMANDA
+        elif tipo_funcion == 'oferta':
+            color_final = COLOR_OFERTA
         else:
-            color_final = color or self._obtenerSiguienteColor()
+            # Si estamos en modo matricial, usar el índice de color de la cuadrante actual
+            if self.matriz and self._cuadrante_actual:
+                cuadrante_info = self._funciones_por_cuadrante[self._cuadrante_actual]
+                color_final = self.estilo.paletaColores[cuadrante_info['indiceColor'] % len(self.estilo.paletaColores)]
+                cuadrante_info['indiceColor'] += 1
+            else:
+                color_final = self._obtenerSiguienteColor()
 
         datos_funcion = {
             'funcion': funcion,
@@ -419,9 +513,9 @@ class Lienzo:
             'tipo': 'curva'
         }
 
-        # Guardar en la vista actual o en la lista general
-        if self.matriz and self._vista_actual:
-            self._funciones_por_vista[self._vista_actual]['funciones'].append(datos_funcion)
+        # Guardar en la cuadrante actual o en la lista general
+        if self.matriz and self._cuadrante_actual:
+            self._funciones_por_cuadrante[self._cuadrante_actual]['funciones'].append(datos_funcion)
         else:
             self._funciones.append(datos_funcion)
 
@@ -435,7 +529,8 @@ class Lienzo:
                     dimension: int = 8,
                     marcador: str = 'o',
                     mostrarNombre: bool = False,
-                    nombre: str = None):
+                    nombre: str = None,
+                    mostrarLineasGuia: bool = True):
         """
         Añade un punto específico (útil para equilibrios).
 
@@ -448,6 +543,7 @@ class Lienzo:
             marcador: Tipo de marcador ('o', 's', '^', etc.)
             mostrarNombre: Si True, muestra el nombre junto al punto
             nombre: Nombre a mostrar (soporta LaTeX, ej: "$E_0$")
+            mostrarLineasGuia: Si True, muestra líneas grises en forma de cruz
 
         Returns:
             self (para encadenar métodos)
@@ -466,12 +562,13 @@ class Lienzo:
             'marcador': marcador,
             'mostrarNombre': mostrarNombre,
             'nombre': nombre,
+            'mostrarLineasGuia': mostrarLineasGuia,
             'tipo': 'punto'
         }
 
-        # Guardar en la vista actual o en la lista general
-        if self.matriz and self._vista_actual:
-            self._funciones_por_vista[self._vista_actual]['funciones'].append(datos_punto)
+        # Guardar en la cuadrante actual o en la lista general
+        if self.matriz and self._cuadrante_actual:
+            self._funciones_por_cuadrante[self._cuadrante_actual]['funciones'].append(datos_punto)
         else:
             self._funciones.append(datos_punto)
 
@@ -502,9 +599,9 @@ class Lienzo:
             'tipo': 'linea_vertical'
         }
 
-        # Guardar en la vista actual o en la lista general
-        if self.matriz and self._vista_actual:
-            self._funciones_por_vista[self._vista_actual]['funciones'].append(datos_linea)
+        # Guardar en la cuadrante actual o en la lista general
+        if self.matriz and self._cuadrante_actual:
+            self._funciones_por_cuadrante[self._cuadrante_actual]['funciones'].append(datos_linea)
         else:
             self._funciones.append(datos_linea)
 
@@ -535,9 +632,9 @@ class Lienzo:
             'tipo': 'linea_horizontal'
         }
 
-        # Guardar en la vista actual o en la lista general
-        if self.matriz and self._vista_actual:
-            self._funciones_por_vista[self._vista_actual]['funciones'].append(datos_linea)
+        # Guardar en la cuadrante actual o en la lista general
+        if self.matriz and self._cuadrante_actual:
+            self._funciones_por_cuadrante[self._cuadrante_actual]['funciones'].append(datos_linea)
         else:
             self._funciones.append(datos_linea)
 
@@ -586,9 +683,9 @@ class Lienzo:
             'tipo': 'relleno'
         }
 
-        # Guardar en la vista actual o en la lista general
-        if self.matriz and self._vista_actual:
-            self._funciones_por_vista[self._vista_actual]['funciones'].append(datos_relleno)
+        # Guardar en la cuadrante actual o en la lista general
+        if self.matriz and self._cuadrante_actual:
+            self._funciones_por_cuadrante[self._cuadrante_actual]['funciones'].append(datos_relleno)
         else:
             self._funciones.append(datos_relleno)
 
@@ -628,16 +725,17 @@ class Lienzo:
         self._configurarEjes(self.ax, self.etiquetaX, self.etiquetaY, self.titulo,
                            self.rangoX, self.rangoY)
 
-        # Añadir leyenda si hay etiquetas (abajo y centrada)
-        etiquetas_existentes = [f['etiqueta'] for f in self._funciones if f.get('etiqueta')]
-        if etiquetas_existentes:
-            self.ax.legend(
-                fontsize=self.estilo.dimensionLeyenda,
-                framealpha=0.9,
-                loc='upper center',
-                bbox_to_anchor=(0.5, -0.1),
-                ncol=min(3, len(etiquetas_existentes))
-            )
+        # Añadir leyenda solo si está activada y hay etiquetas
+        if self.mostrarLeyenda:
+            etiquetas_existentes = [f['etiqueta'] for f in self._funciones if f.get('etiqueta')]
+            if etiquetas_existentes:
+                self.ax.legend(
+                    fontsize=self.estilo.dimensionLeyenda,
+                    framealpha=0.9,
+                    loc='upper center',
+                    bbox_to_anchor=(0.5, -0.1),
+                    ncol=min(3, len(etiquetas_existentes))
+                )
 
         # Ajustar diseño
         plt.tight_layout()
@@ -678,8 +776,8 @@ class Lienzo:
         elif columnas == 1:
             self.axes = self.axes.reshape(-1, 1)
 
-        # Graficar cada vista
-        for (fila, col), vista_data in self._funciones_por_vista.items():
+        # Graficar cada cuadrante
+        for (fila, col), cuadrante_data in self._funciones_por_cuadrante.items():
             ax = self.axes[fila, col]
 
             # Configurar estilo general
@@ -688,34 +786,35 @@ class Lienzo:
             # Configurar cuadrantes
             self._configurarCuadrantes(ax)
 
-            # Graficar funciones de esta vista
-            self._graficarFunciones(ax, vista_data['funciones'])
+            # Graficar funciones de esta cuadrante
+            self._graficarFunciones(ax, cuadrante_data['funciones'])
 
             # Configurar ejes y etiquetas
             self._configurarEjes(
                 ax,
-                vista_data['etiquetaX'],
-                vista_data['etiquetaY'],
-                vista_data['titulo'],
-                vista_data['rangoX'],
-                vista_data['rangoY']
+                cuadrante_data['etiquetaX'],
+                cuadrante_data['etiquetaY'],
+                cuadrante_data['titulo'],
+                cuadrante_data['rangoX'],
+                cuadrante_data['rangoY']
             )
 
-            # Añadir leyenda si hay etiquetas (abajo y centrada)
-            etiquetas_existentes = [f['etiqueta'] for f in vista_data['funciones'] if f.get('etiqueta')]
-            if etiquetas_existentes:
-                ax.legend(
-                    fontsize=self.estilo.dimensionLeyenda,
-                    framealpha=0.9,
-                    loc='upper center',
-                    bbox_to_anchor=(0.5, -0.1),
-                    ncol=min(3, len(etiquetas_existentes))
-                )
+            # Añadir leyenda solo si está activada y hay etiquetas
+            if self.mostrarLeyenda:
+                etiquetas_existentes = [f['etiqueta'] for f in cuadrante_data['funciones'] if f.get('etiqueta')]
+                if etiquetas_existentes:
+                    ax.legend(
+                        fontsize=self.estilo.dimensionLeyenda,
+                        framealpha=0.9,
+                        loc='upper center',
+                        bbox_to_anchor=(0.5, -0.1),
+                        ncol=min(3, len(etiquetas_existentes))
+                    )
 
-        # Ocultar vistas vacías
+        # Ocultar cuadrantes vacías
         for fila in range(filas):
             for col in range(columnas):
-                if (fila, col) not in self._funciones_por_vista:
+                if (fila, col) not in self._funciones_por_cuadrante:
                     self.axes[fila, col].axis('off')
 
         # Ajustar diseño
@@ -799,20 +898,21 @@ class Lienzo:
                 pad=15
             )
 
-        # RANGOS AUTOMÁTICOS CENTRADOS (mejora v0.3.0)
-        # Si no se especifican rangos, calcular automáticamente basados en los datos
+        # RANGOS AUTOMÁTICOS MEJORADOS (v0.3.0)
+        # Ajustar límites para que las curvas ocupen todo el gráfico sin espacios en blanco
         if not rangoX or not rangoY:
             # Obtener los límites actuales de matplotlib (basados en los datos graficados)
             xlim_actual = ax.get_xlim()
             ylim_actual = ax.get_ylim()
 
-            # Calcular rangos automáticos con margen del 10%
+            # Calcular rangos automáticos con margen mínimo del 5%
             if not rangoX:
                 x_min, x_max = xlim_actual
                 # Asegurar que empiece en 0 si todos los valores son positivos
                 if x_min >= 0:
                     x_min = 0
-                margen_x = (x_max - x_min) * 0.1
+                # Margen del 5% para evitar que las curvas toquen los bordes
+                margen_x = (x_max - x_min) * 0.05
                 ax.set_xlim(x_min, x_max + margen_x)
 
             if not rangoY:
@@ -820,7 +920,8 @@ class Lienzo:
                 # Asegurar que empiece en 0 si todos los valores son positivos
                 if y_min >= 0:
                     y_min = 0
-                margen_y = (y_max - y_min) * 0.1
+                # Margen del 5% para evitar que las curvas toquen los bordes
+                margen_y = (y_max - y_min) * 0.05
                 ax.set_ylim(y_min, y_max + margen_y)
         else:
             # Rangos manuales
@@ -849,7 +950,7 @@ class Lienzo:
                 self._graficarCurva(ax, datos_funcion)
     
     def _graficarCurva(self, ax, datos_funcion):
-        """Grafica una curva."""
+        """Grafica una curva, ocultando partes negativas."""
         funcion = datos_funcion['funcion']
 
         # Determinar rango de x
@@ -868,25 +969,37 @@ class Lienzo:
             valores_y = self._evaluarObjetoOikos(funcion, valores_x)
         elif callable(funcion):
             # Función Python normal
-            valores_y = [funcion(x) for x in valores_x]
+            valores_y = np.array([funcion(x) for x in valores_x])
         elif isinstance(funcion, tuple) and len(funcion) == 2:
             # Datos pre-calculados
             valores_x, valores_y = funcion
+            valores_y = np.array(valores_y)
         else:
             raise TypeError(
                 f"Tipo de función no soportado: {type(funcion).__name__}. "
                 f"Se esperaba un objeto de oikos, función callable o tupla (x, y)."
             )
 
-        # Graficar
-        ax.plot(
-            valores_x, valores_y,
-            color=datos_funcion['color'],
-            linewidth=datos_funcion['anchoLinea'],
-            linestyle=datos_funcion['estiloLinea'],
-            label=datos_funcion['etiqueta'],
-            zorder=3
-        )
+        # Asegurar que valores_y sea un array numpy
+        if not isinstance(valores_y, np.ndarray):
+            valores_y = np.array(valores_y)
+
+        # FILTRAR PUNTOS NEGATIVOS: Solo mostrar donde x > 0 y y > 0
+        # Esto evita que se vean las partes de la curva antes del intercepto
+        mask = (valores_x >= 0) & (valores_y >= 0) & ~np.isnan(valores_y)
+        valores_x_filtrados = valores_x[mask]
+        valores_y_filtrados = valores_y[mask]
+
+        # Solo graficar si hay puntos válidos
+        if len(valores_x_filtrados) > 0:
+            ax.plot(
+                valores_x_filtrados, valores_y_filtrados,
+                color=datos_funcion['color'],
+                linewidth=datos_funcion['anchoLinea'],
+                linestyle=datos_funcion['estiloLinea'],
+                label=datos_funcion['etiqueta'],
+                zorder=3
+            )
 
     def _graficarRelleno(self, ax, datos_relleno):
         """Grafica un área de relleno."""
@@ -926,8 +1039,16 @@ class Lienzo:
 
     def _graficarPunto(self, ax, datos_punto):
         """Grafica un punto."""
+        x_val = datos_punto['x']
+        y_val = datos_punto['y']
+
+        # Agregar líneas guía en forma de cruz si está activado
+        if datos_punto.get('mostrarLineasGuia', True):
+            ax.axvline(x=x_val, color='gray', linestyle=':', alpha=0.5, zorder=1)
+            ax.axhline(y=y_val, color='gray', linestyle=':', alpha=0.5, zorder=1)
+
         ax.plot(
-            datos_punto['x'], datos_punto['y'],
+            x_val, y_val,
             marker=datos_punto['marcador'],
             color=datos_punto['color'],
             markersize=datos_punto['dimension'],
@@ -939,7 +1060,7 @@ class Lienzo:
         if datos_punto.get('mostrarNombre') and datos_punto.get('nombre'):
             ax.annotate(
                 datos_punto['nombre'],
-                xy=(datos_punto['x'], datos_punto['y']),
+                xy=(x_val, y_val),
                 xytext=(5, 5),
                 textcoords='offset points',
                 fontsize=self.estilo.dimensionLabel,
@@ -969,32 +1090,27 @@ class Lienzo:
         )
     
     def _evaluarObjetoOikos(self, obj, valores_x):
-        """Evalúa un objeto de oikos en los valores de x."""
+        """
+        Evalúa un objeto de oikos en los valores de x.
+
+        IMPORTANTE: Los economistas grafican FUNCIONES INVERSAS.
+        - Si tenemos Q = 100 - 2P, graficamos P en el eje Y vs Q en el eje X
+        - Por lo tanto: valores_x representa cantidades (Q), valores_y representa precios (P)
+        - Usamos obj.precio(cantidad) para obtener P dado Q
+        """
         import numpy as np
 
-        # Intentar diferentes métodos comunes
-        if hasattr(obj, 'cantidad') and callable(obj.cantidad):
+        # ECONOMISTAS GRAFICAN INVERSAS: eje X = cantidad (Q), eje Y = precio (P)
+        # Por lo tanto, siempre usamos precio(cantidad)
+        if hasattr(obj, 'precio') and callable(obj.precio):
             valores_y = []
-            for x in valores_x:
+            for q in valores_x:  # valores_x son cantidades
                 try:
-                    y = obj.cantidad(x)
+                    p = obj.precio(q)  # obtenemos precio
                     # Asegurar que sea real
-                    if isinstance(y, complex):
-                        y = y.real
-                    valores_y.append(y)
-                except Exception:
-                    valores_y.append(np.nan)
-            return np.array(valores_y)
-
-        elif hasattr(obj, 'precio') and callable(obj.precio):
-            valores_y = []
-            for x in valores_x:
-                try:
-                    y = obj.precio(x)
-                    # Asegurar que sea real
-                    if isinstance(y, complex):
-                        y = y.real
-                    valores_y.append(y)
+                    if isinstance(p, complex):
+                        p = p.real
+                    valores_y.append(p)
                 except Exception:
                     valores_y.append(np.nan)
             return np.array(valores_y)

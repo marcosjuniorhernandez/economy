@@ -121,7 +121,8 @@ OIKOS instala automáticamente:
 
 ```python
 # Importar las clases principales
-from oikos import Demanda, Oferta, equilibrio, Lienzo, ROJO, AZUL, VERDE
+from oikos import Demanda, Oferta, equilibrio
+from oikos.utilidades import Lienzo, ROJO, VERDE2, AZUL
 
 # 1. Crear funciones de demanda y oferta
 demanda = Demanda("Q = 100 - 2P")
@@ -134,13 +135,13 @@ print(eq)  # {'P*': 24.0, 'Q*': 52.0}
 # 3. Graficar el mercado
 lienzo = Lienzo()
 lienzo.configurarEtiquetas(
-    etiquetaX="Cantidad",
-    etiquetaY="Precio",
+    etiquetaX="Cantidad (Q)",
+    etiquetaY="Precio (P)",
     titulo="Mi Primer Mercado"
 )
-lienzo.agregar(demanda, etiqueta="Demanda", color=ROJO)
-lienzo.agregar(oferta, etiqueta="Oferta", color=AZUL)
-lienzo.agregarPunto(eq['Q*'], eq['P*'], color=VERDE, dimension=12)
+lienzo.agregar(demanda, color=ROJO)
+lienzo.agregar(oferta, color=VERDE2)
+lienzo.agregarPunto(eq['Q*'], eq['P*'], color=AZUL, dimension=10)
 lienzo.graficar()
 ```
 
@@ -714,10 +715,13 @@ else:
 
 El `Lienzo` es la herramienta principal para crear gráficos económicos.
 
+**IMPORTANTE**: Los economistas grafican funciones INVERSAS. Si tu función es `Q = 100 - 2P`, la gráfica muestra `P` en el eje Y vs `Q` en el eje X.
+
 #### Uso básico
 
 ```python
-from oikos import Lienzo, Demanda, Oferta, equilibrio, ROJO, AZUL, VERDE
+from oikos import Demanda, Oferta, equilibrio
+from oikos.utilidades import Lienzo, ROJO, VERDE2, AZUL
 
 # Crear mercado
 demanda = Demanda("Q = 100 - 2P")
@@ -729,32 +733,50 @@ lienzo = Lienzo()
 
 # Configurar ejes y título
 lienzo.configurarEtiquetas(
-    etiquetaX="Cantidad (unidades)",
-    etiquetaY="Precio ($/unidad)",
+    etiquetaX="Cantidad (Q)",
+    etiquetaY="Precio (P)",
     titulo="Mercado de Ejemplo"
 )
 
-# Agregar curvas
-lienzo.agregar(demanda, etiqueta="Demanda", color=ROJO)
-lienzo.agregar(oferta, etiqueta="Oferta", color=AZUL)
+# Agregar curvas (se grafican automáticamente como P vs Q)
+lienzo.agregar(demanda, color=ROJO)
+lienzo.agregar(oferta, color=VERDE2)
 
 # Marcar equilibrio
 lienzo.agregarPunto(
     x=eq['Q*'],
     y=eq['P*'],
-    etiqueta=f"E₀ (Q={eq['Q*']:.0f}, P=${eq['P*']:.2f})",
-    color=VERDE,
-    dimension=12,
-    mostrarNombre=True,
-    nombre="$E_0$"  # LaTeX
+    color=AZUL,
+    dimension=10
 )
-
-# Líneas guía
-lienzo.agregarLineaVertical(x=eq['Q*'], color='gray', estiloLinea='--')
-lienzo.agregarLineaHorizontal(y=eq['P*'], color='gray', estiloLinea='--')
 
 # Mostrar
 lienzo.graficar()
+```
+
+#### Método graficar() directo
+
+Desde v0.3.0, puedes graficar directamente desde las clases:
+
+```python
+# Graficar solo demanda
+demanda = Demanda("Q = 100 - 2P")
+demanda.graficar()
+
+# Graficar solo oferta
+oferta = Oferta("Q = -20 + 3P")
+oferta.graficar()
+
+# Graficar IS-LM
+modelo = ISLM()
+modelo.graficar(
+    consumo="C = 200 + 0.8(Y - T)",
+    inversion="I = 300 - 20i",
+    demandaDinero="L = 0.2Y - 10i",
+    gastoPublico=200,
+    impuestos=150,
+    ofertaMonetaria=200
+)
 ```
 
 #### Métodos disponibles
@@ -788,13 +810,13 @@ lienzo = Lienzo(
 )
 
 # ========== PANEL (1, 1) ==========
-lienzo.vista(1, 1)  # Fila 1, Columna 1
+lienzo.cuadrante(1, 1)  # Fila 1, Columna 1
 lienzo.configurarEtiquetas(titulo="Mercado A")
 lienzo.agregar(demandaA, etiqueta="D", color=ROJO)
 lienzo.agregar(ofertaA, etiqueta="S", color=AZUL)
 
 # ========== PANEL (1, 2) ==========
-lienzo.vista(1, 2)  # Fila 1, Columna 2
+lienzo.cuadrante(1, 2)  # Fila 1, Columna 2
 lienzo.configurarEtiquetas(titulo="Mercado B")
 lienzo.agregar(demandaB, etiqueta="D", color=ROJO)
 lienzo.agregar(ofertaB, etiqueta="S", color=AZUL)
@@ -1237,7 +1259,7 @@ fig.savefig("mi_grafico.png", dpi=300, bbox_inches='tight')
 
 #### `Lienzo`
 - `__init__(estilo=None, cuadrantes="I", relacionAspecto="auto", matriz=None, dimensionMatriz=None, alinearEjes=False)`
-- `vista(fila: int, columna: int)`
+- `cuadrante(fila: int, columna: int)`
 - `configurarEtiquetas(etiquetaX=None, etiquetaY=None, titulo=None)`
 - `configurarRango(rangoX=None, rangoY=None)`
 - `agregar(funcion, etiqueta=None, color=None, ...)`
@@ -1276,15 +1298,18 @@ Calcula excedentes.
 
 ### Colores Predefinidos
 
+Importa desde `oikos.utilidades`:
+
 ```python
-ROJO = '#E74C3C'
-AZUL = '#3498DB'
-VERDE = '#2ECC71'
-AMARILLO = '#F39C12'
-NARANJA = '#E67E22'
-MORADO = '#9B59B6'
-TURQUESA = '#1ABC9C'
-ROSA = '#FF69B4'
+from oikos.utilidades import (
+    ROJO, AZUL, VERDE, VERDE2,
+    AMARILLO, NARANJA, MORADO,
+    TURQUESA, CELESTE, ROSA
+)
+
+# Colores por defecto
+COLOR_DEMANDA = ROJO    # Para curvas de demanda
+COLOR_OFERTA = VERDE2   # Para curvas de oferta
 ```
 
 ### Excepciones

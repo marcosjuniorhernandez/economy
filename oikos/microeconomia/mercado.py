@@ -246,9 +246,42 @@ class Demanda:
         
         return f"Demanda {tipo} (ε = {e:.2f}): {explicacion}"
     
+    def graficar(self, rango: tuple = None, color: str = None, etiqueta: str = None):
+        """
+        Grafica la curva de demanda.
+
+        Args:
+            rango: (Q_min, Q_max) rango de cantidades a graficar
+            color: Color de la curva
+            etiqueta: Etiqueta para la leyenda
+
+        Returns:
+            Lienzo con la gráfica
+
+        Ejemplo:
+            >>> demanda = Demanda("Q = 100 - 2P")
+            >>> demanda.graficar()
+        """
+        from ..utilidades.visuales import Lienzo, ROJO
+
+        lienzo = Lienzo()
+        lienzo.configurarEtiquetas(
+            etiquetaX="Cantidad (Q)",
+            etiquetaY="Precio (P)",
+            titulo="Curva de Demanda"
+        )
+        lienzo.agregar(
+            self,
+            etiqueta=etiqueta or "Demanda",
+            color=color or ROJO,
+            rangoPersonalizado=rango
+        )
+        lienzo.graficar()
+        return lienzo
+
     def __repr__(self):
         return f"Demanda('{self.ecuacionOriginal}')"
-    
+
     def __str__(self):
         from sympy import latex
         return f"Demanda: {latex(self.expresion)}"
@@ -483,9 +516,42 @@ class Oferta:
         
         return f"Oferta {tipo} (η = {n:.2f}): {explicacion}"
     
+    def graficar(self, rango: tuple = None, color: str = None, etiqueta: str = None):
+        """
+        Grafica la curva de oferta.
+
+        Args:
+            rango: (Q_min, Q_max) rango de cantidades a graficar
+            color: Color de la curva
+            etiqueta: Etiqueta para la leyenda
+
+        Returns:
+            Lienzo con la gráfica
+
+        Ejemplo:
+            >>> oferta = Oferta("Q = -20 + 3P")
+            >>> oferta.graficar()
+        """
+        from ..utilidades.visuales import Lienzo, VERDE2
+
+        lienzo = Lienzo()
+        lienzo.configurarEtiquetas(
+            etiquetaX="Cantidad (Q)",
+            etiquetaY="Precio (P)",
+            titulo="Curva de Oferta"
+        )
+        lienzo.agregar(
+            self,
+            etiqueta=etiqueta or "Oferta",
+            color=color or VERDE2,
+            rangoPersonalizado=rango
+        )
+        lienzo.graficar()
+        return lienzo
+
     def __repr__(self):
         return f"Oferta('{self.ecuacionOriginal}')"
-    
+
     def __str__(self):
         from sympy import latex
         return f"Oferta: {latex(self.expresion)}"
@@ -645,19 +711,26 @@ def excedentes(oferta: Oferta,
                precio: Optional[float] = None,
                cantidad: Optional[float] = None) -> Dict[str, float]:
     """
-    Calcula los excedentes del consumidor y productor.
+    Calcula los excedentes del consumidor y productor en equilibrio libre.
 
     El excedente del consumidor (EC) es el área entre la curva de demanda
     y el precio de mercado. El excedente del productor (EP) es el área entre
     el precio de mercado y la curva de oferta.
 
-    Si no se especifica precio/cantidad, usa el equilibrio.
+    Si no se especifica precio/cantidad, usa el equilibrio de libre mercado.
+
+    IMPORTANTE: Esta función calcula excedentes para mercados libres.
+    Para calcular excedentes con intervenciones del gobierno (impuestos,
+    subsidios, precios máximos, precios mínimos), debes:
+    1. Calcular el nuevo equilibrio con la intervención
+    2. Pasar el nuevo precio y cantidad a esta función
+    3. Calcular también la pérdida irrecuperable de eficiencia (deadweight loss)
 
     Args:
         oferta: Función de oferta
         demanda: Función de demanda
-        precio: Precio al cual calcular (None = equilibrio)
-        cantidad: Cantidad al cual calcular (None = equilibrio)
+        precio: Precio al cual calcular (None = equilibrio libre)
+        cantidad: Cantidad al cual calcular (None = equilibrio libre)
 
     Returns:
         Diccionario con:
@@ -668,10 +741,17 @@ def excedentes(oferta: Oferta,
             - 'Q': Cantidad usada
 
     Ejemplo:
+        >>> # Excedentes en equilibrio libre
         >>> demanda = Demanda("Q = 100 - 2P")
         >>> oferta = Oferta("Q = -20 + 3P")
         >>> exc = excedentes(oferta, demanda)
         >>> print(f"EC: {exc['EC']}, EP: {exc['EP']}")
+        >>>
+        >>> # Excedentes con precio máximo
+        >>> precio_maximo = 20
+        >>> cantidad_con_control = oferta.cantidad(precio_maximo)
+        >>> exc_control = excedentes(oferta, demanda, precio_maximo, cantidad_con_control)
+        >>> # Para calcular pérdida irrecuperable, compara exc_control['ES'] con exc['ES']
     """
     # Si no se especifican, usar equilibrio
     if precio is None or cantidad is None:

@@ -45,22 +45,27 @@ from .utilidades import (
     translatex,
     despejar,
     extraerVariables,
-    
+
     # Visuales
     escribir,
     Lienzo,
     EstiloGrafico,
     graficoRapido,
-    
-    # Colores predefinidos
-    ROJO, AZUL, VERDE, AMARILLO, NARANJA, MORADO, TURQUESA, ROSA,
-    
+
+    # Colores predefinidos - Todos disponibles sin prefijo
+    ROJO, AZUL, VERDE, AMARILLO, CIAN, MAGENTA,
+    NARANJA, MORADO, ROSA, LIMA,
+    TURQUESA, CELESTE, VIOLETA, CORAL,
+    ROJO2, AZUL2, VERDE2, AMARILLO2,
+    GRIS, NEGRO,
+    COLOR_DEMANDA, COLOR_OFERTA,
+
     # Validadores
     validarPositivo,
     validarNoNegativo,
     validarRango,
     validarPropension,
-    
+
     # Decoradores
     ayuda,
     explicacion
@@ -79,40 +84,45 @@ from .nucleo.excepciones import (
 __all__ = [
     # Versión
     '__version__',
-    
+
     # Microeconomía
     'Demanda',
     'Oferta',
     'equilibrio',
     'excedentes',
-    
+
     # Macroeconomía
     'ISLM',
-    
+
     # Utilidades - Parseador
     'translatex',
     'despejar',
     'extraerVariables',
-    
-    # Utilidades - Visuales
+
+    # Utilidades - Visuales (disponibles directamente)
     'escribir',
     'Lienzo',
     'EstiloGrafico',
     'graficoRapido',
-    
-    # Colores
-    'ROJO', 'AZUL', 'VERDE', 'AMARILLO', 'NARANJA', 'MORADO', 'TURQUESA', 'ROSA',
-    
+
+    # Colores (disponibles directamente sin prefijo)
+    'ROJO', 'AZUL', 'VERDE', 'AMARILLO', 'CIAN', 'MAGENTA',
+    'NARANJA', 'MORADO', 'ROSA', 'LIMA',
+    'TURQUESA', 'CELESTE', 'VIOLETA', 'CORAL',
+    'ROJO2', 'AZUL2', 'VERDE2', 'AMARILLO2',
+    'GRIS', 'NEGRO',
+    'COLOR_DEMANDA', 'COLOR_OFERTA',
+
     # Validadores
     'validarPositivo',
     'validarNoNegativo',
     'validarRango',
     'validarPropension',
-    
+
     # Decoradores
     'ayuda',
     'explicacion',
-    
+
     # Excepciones
     'ErrorOikos',
     'ErrorParseador',
@@ -120,6 +130,11 @@ __all__ = [
     'ErrorValidacion',
     'ErrorGrafico'
 ]
+
+
+# ============= ATAJO PARA FACILITAR USO =============
+# Ahora puedes hacer: import oikos as ok
+# Y usar directamente: ok.escribir(), ok.ROJO, ok.Lienzo(), etc.
 
 
 def info():
