@@ -16,8 +16,8 @@ from dataclasses import dataclass, field
 
 
 # ============= COLORES PREDEFINIDOS =============
-# Puedes usar estos colores directamente sin el prefijo 'ok.'
-# Ejemplo: lienzo.agregar(demanda, color=ROJO)
+# Usa estos colores con el prefijo 'ok.' para consistencia con 'import oikos as ok'
+# Ejemplo: lienzo.agregar(demanda, color=ok.ROJO)
 
 # COLORES PUROS
 ROJO     = "#FF0000"
@@ -48,73 +48,94 @@ NEGRO    = "#000000"
 
 # COLORES POR DEFECTO PARA ECONOMÍA
 COLOR_DEMANDA = ROJO   # Rojo para demanda
-COLOR_OFERTA = VERDE2  # Verde para oferta
+COLOR_OFERTA = AZUL    # Azul para oferta
+
+# ============= CONSTANTES DE DIRECCIÓN =============
+# Para alinear ejes entre cuadrantes en gráficos matriciales
+# Ejemplo: lienzo.cuadrante(2, 1, alinearX=ok.ARRIBA)
+ARRIBA = 'ARRIBA'
+ABAJO = 'ABAJO'
+IZQUIERDA = 'IZQUIERDA'
+DERECHA = 'DERECHA'
 
 
-def escribir(diccionarioResultados: dict, titulo: Optional[str] = None):
+def escribir(contenido, titulo: Optional[str] = None):
     """
-    Muestra resultados económicos de forma clara y centrada.
+    Muestra resultados económicos en formato LaTeX (Jupyter) o texto plano (terminal).
 
-    Mejoras v0.3.0:
-    - Formato en lista con saltos de línea
-    - Alineación a la izquierda
-    - Mejor legibilidad en terminal y Jupyter
+    Esta función es como print() pero con formato LaTeX para Jupyter.
 
     Args:
-        diccionarioResultados: Diccionario con variables y valores
-                              Ejemplo: {'P^*': 25, 'Q^*': 50}
+        contenido: Puede ser:
+                  - String: Se muestra en formato LaTeX
+                  - Diccionario: Se muestra cada clave-valor en formato LaTeX
+                  Ejemplo dict: {'P^*': 25, 'Q^*': 50}
+                  Ejemplo str: "m = P_x X + P_y Y"
         titulo: (Opcional) Título del análisis
 
-    Ejemplo:
+    Ejemplos:
+        >>> # Con string (ecuación)
+        >>> escribir("m = P_x X + P_y Y")
+
+        >>> # Con diccionario (resultados)
         >>> resultados = {'Q^*': 50, 'P^*': 10, 'E_p': -1.5}
         >>> escribir(resultados, "Equilibrio de Mercado")
-
-        # Salida en Jupyter:
-        Equilibrio de Mercado
-        Q* = 50
-        P* = 10
-        Ep = -1.5
     """
-    # Validar entrada
-    if not isinstance(diccionarioResultados, dict):
-        raise TypeError(f"Se esperaba un diccionario, se recibió {type(diccionarioResultados).__name__}")
-
     # Verificamos si estamos en Jupyter/Colab o terminal
     try:
         from IPython import get_ipython
         enJupyter = get_ipython() is not None
     except ImportError:
         enJupyter = False
-    
+
     if enJupyter:
         # ====== JUPYTER/COLAB ======
         # Mostramos el título si existe
         if titulo:
             display(Math(rf"\textbf{{{titulo}}}"))
             display(Math(r"\text{ }"))  # Espacio
-        
-        # Mostramos cada variable en su propia línea, alineada a la izquierda
-        for variable, valor in diccionarioResultados.items():
-            # Convertimos el valor a LaTeX si es necesario
-            valor_latex = latex(valor) if hasattr(valor, '__class__') else str(valor)
-            
-            # Mostramos cada resultado en su propia línea
-            ecuacion = rf"{variable} = {valor_latex}"
-            display(Math(ecuacion))
-    
+
+        # Si es un diccionario
+        if isinstance(contenido, dict):
+            # Mostramos cada variable en su propia línea
+            for variable, valor in contenido.items():
+                # Convertimos el valor a LaTeX si es necesario
+                valor_latex = latex(valor) if hasattr(valor, '__class__') and not isinstance(valor, (int, float, str)) else str(valor)
+
+                # Mostramos cada resultado en su propia línea
+                ecuacion = rf"{variable} = {valor_latex}"
+                display(Math(ecuacion))
+
+        # Si es un string
+        elif isinstance(contenido, str):
+            # Mostramos el string directamente en formato LaTeX
+            display(Math(contenido))
+
+        else:
+            # Fallback: convertir a string
+            display(Math(str(contenido)))
+
     else:
         # ====== TERMINAL ======
         if titulo:
             print(f"\n{'='*50}")
             print(f"  {titulo}")
             print(f"{'='*50}")
-        
-        # Mostramos cada resultado en su propia línea
-        for variable, valor in diccionarioResultados.items():
-            print(f"  {variable} = {valor}")
-        
-        if titulo:
-            print(f"{'='*50}\n")
+
+        # Si es un diccionario
+        if isinstance(contenido, dict):
+            # Mostramos cada resultado en su propia línea
+            for variable, valor in contenido.items():
+                print(f"  {variable} = {valor}")
+
+            if titulo:
+                print(f"{'='*50}\n")
+
+        # Si es un string u otro tipo
+        else:
+            print(f"  {contenido}")
+            if titulo:
+                print(f"{'='*50}\n")
 
 
 @dataclass
@@ -133,12 +154,13 @@ class EstiloGrafico:
         familiaFuente: Familia de fuente ('serif', 'sans-serif', 'monospace')
 
     Ejemplo:
+        >>> import oikos as ok
         >>> # Usar estilo personalizado
-        >>> mi_estilo = EstiloGrafico(
-        ...     paletaColores=[ROJO, AZUL, VERDE],
+        >>> mi_estilo = ok.EstiloGrafico(
+        ...     paletaColores=[ok.ROJO, ok.AZUL, ok.VERDE],
         ...     anchoLinea=3.0
         ... )
-        >>> lienzo = Lienzo(estilo=mi_estilo)
+        >>> lienzo = ok.Lienzo(estilo=mi_estilo)
     """
 
     # Paleta de colores VIVOS (nueva para v0.3.0)
@@ -225,19 +247,20 @@ class Lienzo:
         dimensionMatriz: (ancho, alto) en pulgadas para figuras con matriz
 
     Ejemplo:
+        >>> import oikos as ok
         >>> # Crear un gráfico simple
-        >>> lienzo = Lienzo()
+        >>> lienzo = ok.Lienzo()
         >>> lienzo.configurarEtiquetas(
         ...     etiquetaX="Cantidad (Q)",
         ...     etiquetaY="Precio (P)",
         ...     titulo="Mercado Competitivo"
         ... )
-        >>> lienzo.agregar(demanda, etiqueta="Demanda", color=ROJO)
-        >>> lienzo.agregar(oferta, etiqueta="Oferta", color=AZUL)
+        >>> lienzo.agregar(demanda, etiqueta="Demanda", color=ok.ROJO)
+        >>> lienzo.agregar(oferta, etiqueta="Oferta", color=ok.AZUL)
         >>> lienzo.graficar()
 
         >>> # Crear gráfico matricial (estilo económico clásico)
-        >>> lienzo = Lienzo(matriz=(2, 2), dimensionMatriz=(18, 12))
+        >>> lienzo = ok.Lienzo(matriz=(2, 2), dimensionMatriz=(18, 12))
         >>> # Usar cuadrante(fila, columna) para seleccionar posición
         >>> lienzo.cuadrante(1, 2)  # Fila 1, Columna 2
         >>> lienzo.configurarEtiquetas(titulo="Cruz Keynesiana")
@@ -299,16 +322,17 @@ class Lienzo:
         Args:
             fila: Índice de fila (1-indexed, comienza desde 1)
             columna: Índice de columna (1-indexed, comienza desde 1)
-            alinearX: Alinear eje X con cuadrante en: 'arriba', 'abajo'. Valida posición automáticamente
-            alinearY: Alinear eje Y con cuadrante en: 'izquierda', 'derecha'. Valida posición automáticamente
+            alinearX: Alinear eje X con cuadrante vecino. Opciones: 'ARRIBA', 'ABAJO'
+            alinearY: Alinear eje Y con cuadrante vecino. Opciones: 'IZQUIERDA', 'DERECHA'
 
         Returns:
             self (para encadenar métodos)
 
         Ejemplo:
-            >>> lienzo = Lienzo(matriz=(2, 2))
-            >>> lienzo.cuadrante(1, 2, alinearY='izquierda')  # Solo si está a la izquierda
-            >>> lienzo.configurarEtiquetas(titulo="Cruz Keynesiana")
+            >>> lienzo = Lienzo(matriz=(3, 2))
+            >>> # Cuadrante (2,1): tiene vecino arriba (1,1) y abajo (3,1)
+            >>> lienzo.cuadrante(2, 1, alinearX='ARRIBA')
+            >>> lienzo.configurarEtiquetas(titulo="Gráfica central")
             >>> lienzo.agregar(funcion1)
         """
         if not self.matriz:
@@ -324,26 +348,30 @@ class Lienzo:
         if columna < 1 or columna > self.matriz[1]:
             raise ValueError(f"Columna {columna} fuera de rango. Debe estar entre 1 y {self.matriz[1]}.")
 
-        # Validar alineación de ejes según posición
+        # Validar alineación de ejes con vecinos tipo torre (knn=1)
         alinear_x_validado = None
         alinear_y_validado = None
 
         if alinearX:
-            if alinearX == 'arriba' and fila == 1:
-                alinear_x_validado = 'arriba'
-            elif alinearX == 'abajo' and fila == self.matriz[0]:
-                alinear_x_validado = 'abajo'
-            elif alinearX in ['arriba', 'abajo']:
-                # No está en la posición correcta, ignorar alineación
+            if alinearX == 'ARRIBA' and fila > 1:
+                # Verificar que existe vecino arriba
+                alinear_x_validado = 'ARRIBA'
+            elif alinearX == 'ABAJO' and fila < self.matriz[0]:
+                # Verificar que existe vecino abajo
+                alinear_x_validado = 'ABAJO'
+            elif alinearX in ['ARRIBA', 'ABAJO']:
+                # No tiene vecino en esa dirección, ignorar
                 pass
 
         if alinearY:
-            if alinearY == 'izquierda' and columna == 1:
-                alinear_y_validado = 'izquierda'
-            elif alinearY == 'derecha' and columna == self.matriz[1]:
-                alinear_y_validado = 'derecha'
-            elif alinearY in ['izquierda', 'derecha']:
-                # No está en la posición correcta, ignorar alineación
+            if alinearY == 'IZQUIERDA' and columna > 1:
+                # Verificar que existe vecino a la izquierda
+                alinear_y_validado = 'IZQUIERDA'
+            elif alinearY == 'DERECHA' and columna < self.matriz[1]:
+                # Verificar que existe vecino a la derecha
+                alinear_y_validado = 'DERECHA'
+            elif alinearY in ['IZQUIERDA', 'DERECHA']:
+                # No tiene vecino en esa dirección, ignorar
                 pass
 
         self._cuadrante_actual = (fila_idx, columna_idx)
@@ -461,7 +489,7 @@ class Lienzo:
                     - Tupla de arrays: (valores_x, valores_y)
             etiqueta: Texto para la leyenda
             color: Color de la curva (hex o nombre). Si no se especifica, se detecta automáticamente:
-                   ROJO para Demanda, VERDE para Oferta, colores de paleta para otros
+                   ok.ROJO para Demanda, ok.VERDE para Oferta, colores de paleta para otros
             anchoLinea: Grosor de la línea
             estiloLinea: '-' (sólida), '--' (guiones), ':' (puntos)
             rangoPersonalizado: Rango específico para esta función
@@ -470,9 +498,10 @@ class Lienzo:
             self (para encadenar métodos)
 
         Ejemplo:
-            >>> lienzo.agregar(demanda, etiqueta="Demanda")  # Color ROJO automático
-            >>> lienzo.agregar(oferta, etiqueta="Oferta")     # Color VERDE automático
-            >>> lienzo.agregar(lambda q: 20 + 0.5*q, etiqueta="Otra", color=AZUL)
+            >>> import oikos as ok
+            >>> lienzo.agregar(demanda, etiqueta="Demanda", color=ok.ROJO)
+            >>> lienzo.agregar(oferta, etiqueta="Oferta", color=ok.VERDE2)
+            >>> lienzo.agregar(lambda q: 20 + 0.5*q, etiqueta="Otra", color=ok.AZUL)
         """
         # Auto-detectar si es un objeto de oikos
         es_objeto_oikos = hasattr(funcion, '__module__') and 'oikos' in str(funcion.__module__)
@@ -525,9 +554,9 @@ class Lienzo:
                     x: float,
                     y: float,
                     etiqueta: str = None,
-                    color: str = None,
-                    dimension: int = 8,
-                    marcador: str = 'o',
+                    color: str = NEGRO,
+                    dimension: int = 5,
+                    marcador: str = 's',
                     mostrarNombre: bool = False,
                     nombre: str = None,
                     mostrarLineasGuia: bool = True):
@@ -549,8 +578,9 @@ class Lienzo:
             self (para encadenar métodos)
 
         Ejemplo:
+            >>> import oikos as ok
             >>> # Marcar el equilibrio
-            >>> lienzo.agregarPunto(50, 25, etiqueta="Equilibrio", color=VERDE,
+            >>> lienzo.agregarPunto(50, 25, etiqueta="Equilibrio", color=ok.VERDE,
             ...                     mostrarNombre=True, nombre="$E_0$")
         """
         datos_punto = {
@@ -664,12 +694,13 @@ class Lienzo:
             self (para encadenar métodos)
 
         Ejemplo:
+            >>> import oikos as ok
             >>> # Excedente del consumidor
             >>> lienzo.agregarRelleno(
             ...     demanda,
             ...     lambda q: precio_equilibrio,
             ...     rangoX=(0, cantidad_equilibrio),
-            ...     color=AZUL,
+            ...     color=ok.AZUL,
             ...     etiqueta="Excedente Consumidor"
             ... )
         """
@@ -811,6 +842,28 @@ class Lienzo:
                         ncol=min(3, len(etiquetas_existentes))
                     )
 
+        # APLICAR ALINEACIÓN ESPECÍFICA DE EJES ENTRE CUADRANTES
+        for (fila, col), cuadrante_data in self._funciones_por_cuadrante.items():
+            ax_actual = self.axes[fila, col]
+
+            # Alinear eje X con vecino ARRIBA o ABAJO
+            if cuadrante_data.get('alinearX'):
+                if cuadrante_data['alinearX'] == 'ARRIBA' and fila > 0:
+                    ax_vecino = self.axes[fila - 1, col]
+                    ax_actual.sharex(ax_vecino)
+                elif cuadrante_data['alinearX'] == 'ABAJO' and fila < filas - 1:
+                    ax_vecino = self.axes[fila + 1, col]
+                    ax_actual.sharex(ax_vecino)
+
+            # Alinear eje Y con vecino IZQUIERDA o DERECHA
+            if cuadrante_data.get('alinearY'):
+                if cuadrante_data['alinearY'] == 'IZQUIERDA' and col > 0:
+                    ax_vecino = self.axes[fila, col - 1]
+                    ax_actual.sharey(ax_vecino)
+                elif cuadrante_data['alinearY'] == 'DERECHA' and col < columnas - 1:
+                    ax_vecino = self.axes[fila, col + 1]
+                    ax_actual.sharey(ax_vecino)
+
         # Ocultar cuadrantes vacías
         for fila in range(filas):
             for col in range(columnas):
@@ -859,19 +912,6 @@ class Lienzo:
             ax.spines[spine].set_linewidth(self.estilo.anchoEje)
             ax.spines[spine].set_color(self.estilo.colorEje)
 
-        # RESALTAR EJES x=0 y y=0 (estilo económico)
-        # Obtener límites actuales
-        xlim = ax.get_xlim()
-        ylim = ax.get_ylim()
-
-        # Dibujar eje Y=0 (horizontal) si está en el rango visible
-        if ylim[0] <= 0 <= ylim[1]:
-            ax.axhline(y=0, color='black', linewidth=self.estilo.anchoEje * 1.2, zorder=2)
-
-        # Dibujar eje X=0 (vertical) si está en el rango visible
-        if xlim[0] <= 0 <= xlim[1]:
-            ax.axvline(x=0, color='black', linewidth=self.estilo.anchoEje * 1.2, zorder=2)
-
     def _configurarEjes(self, ax, etiquetaX, etiquetaY, titulo, rangoX, rangoY):
         """Configura las etiquetas y rangos de los ejes."""
         # Desactivar LaTeX en matplotlib
@@ -898,31 +938,21 @@ class Lienzo:
                 pad=15
             )
 
-        # RANGOS AUTOMÁTICOS MEJORADOS (v0.3.0)
-        # Ajustar límites para que las curvas ocupen todo el gráfico sin espacios en blanco
+        # RANGOS AUTOMÁTICOS (v0.3.0)
+        # Las gráficas DEBEN ocupar TODO el espacio sin dejar márgenes
         if not rangoX or not rangoY:
             # Obtener los límites actuales de matplotlib (basados en los datos graficados)
             xlim_actual = ax.get_xlim()
             ylim_actual = ax.get_ylim()
 
-            # Calcular rangos automáticos con margen mínimo del 5%
+            # Usar rangos exactos de los datos para ocupar TODO el cuadro
             if not rangoX:
                 x_min, x_max = xlim_actual
-                # Asegurar que empiece en 0 si todos los valores son positivos
-                if x_min >= 0:
-                    x_min = 0
-                # Margen del 5% para evitar que las curvas toquen los bordes
-                margen_x = (x_max - x_min) * 0.05
-                ax.set_xlim(x_min, x_max + margen_x)
+                ax.set_xlim(x_min, x_max)
 
             if not rangoY:
                 y_min, y_max = ylim_actual
-                # Asegurar que empiece en 0 si todos los valores son positivos
-                if y_min >= 0:
-                    y_min = 0
-                # Margen del 5% para evitar que las curvas toquen los bordes
-                margen_y = (y_max - y_min) * 0.05
-                ax.set_ylim(y_min, y_max + margen_y)
+                ax.set_ylim(y_min, y_max)
         else:
             # Rangos manuales
             if rangoX:
@@ -959,21 +989,31 @@ class Lienzo:
         elif self.rangoX:
             x_min, x_max = self.rangoX
         else:
-            x_min, x_max = 0, 100  # Valor por defecto
+            # AUTODETECCIÓN DE RANGO (v0.3.0)
+            # Si el usuario no especificó rango, intentamos deducirlo de los datos
+            # Para tuplas (x, y), usamos directamente los valores de x
+            if isinstance(funcion, tuple) and len(funcion) == 2:
+                valores_x_temp = np.array(funcion[0])
+                x_min = float(np.min(valores_x_temp))
+                x_max = float(np.max(valores_x_temp))
+            else:
+                # Para funciones, usar rango por defecto
+                x_min, x_max = 0, 100
 
         valores_x = np.linspace(x_min, x_max, 500)
 
         # Calcular valores_y según el tipo de función
-        if datos_funcion['es_oikos']:
+        if isinstance(funcion, tuple) and len(funcion) == 2:
+            # Datos pre-calculados - USAR DIRECTAMENTE sin linspace
+            valores_x, valores_y = funcion
+            valores_x = np.array(valores_x)
+            valores_y = np.array(valores_y)
+        elif datos_funcion['es_oikos']:
             # Objeto de oikos
             valores_y = self._evaluarObjetoOikos(funcion, valores_x)
         elif callable(funcion):
             # Función Python normal
             valores_y = np.array([funcion(x) for x in valores_x])
-        elif isinstance(funcion, tuple) and len(funcion) == 2:
-            # Datos pre-calculados
-            valores_x, valores_y = funcion
-            valores_y = np.array(valores_y)
         else:
             raise TypeError(
                 f"Tipo de función no soportado: {type(funcion).__name__}. "
@@ -984,9 +1024,9 @@ class Lienzo:
         if not isinstance(valores_y, np.ndarray):
             valores_y = np.array(valores_y)
 
-        # FILTRAR PUNTOS NEGATIVOS: Solo mostrar donde x > 0 y y > 0
-        # Esto evita que se vean las partes de la curva antes del intercepto
-        mask = (valores_x >= 0) & (valores_y >= 0) & ~np.isnan(valores_y)
+        # GRAFICAR TODA LA FUNCIÓN: incluir valores negativos y positivos
+        # Solo filtrar valores NaN/infinitos
+        mask = ~np.isnan(valores_y) & ~np.isinf(valores_y)
         valores_x_filtrados = valores_x[mask]
         valores_y_filtrados = valores_y[mask]
 
@@ -1010,14 +1050,13 @@ class Lienzo:
         y1 = self._evaluarFuncion(datos_relleno['funcion1'], valores_x)
         y2 = self._evaluarFuncion(datos_relleno['funcion2'], valores_x) if datos_relleno['funcion2'] else 0
 
-        # CORRECCIÓN: Solo graficar donde x > 0 y y > 0
-        # Filtrar puntos donde ambas funciones son positivas
-        if isinstance(y2, (int, float)):
-            # Si y2 es constante
-            mask = (valores_x > 0) & (y1 > 0) & (y2 >= 0)
+        # Filtrar solo valores NaN/infinitos
+        if isinstance(y1, np.ndarray):
+            mask = ~np.isnan(y1) & ~np.isinf(y1)
+            if isinstance(y2, np.ndarray):
+                mask = mask & ~np.isnan(y2) & ~np.isinf(y2)
         else:
-            # Si y2 es array
-            mask = (valores_x > 0) & (y1 > 0) & (y2 >= 0)
+            mask = np.ones(len(valores_x), dtype=bool)
 
         # Aplicar máscara
         valores_x_filtrados = valores_x[mask]

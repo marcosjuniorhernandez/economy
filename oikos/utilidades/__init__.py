@@ -22,7 +22,9 @@ from .visuales import (
     TURQUESA, CELESTE, VIOLETA, CORAL,
     ROJO2, AZUL2, VERDE2, AMARILLO2,
     GRIS, NEGRO,
-    COLOR_DEMANDA, COLOR_OFERTA
+    COLOR_DEMANDA, COLOR_OFERTA,
+    # Constantes de dirección para alinear ejes
+    ARRIBA, ABAJO, IZQUIERDA, DERECHA
 )
 from .decoradores import (
     ayuda,
@@ -59,6 +61,9 @@ __all__ = [
     'ROJO2', 'AZUL2', 'VERDE2', 'AMARILLO2',
     'GRIS', 'NEGRO',
     'COLOR_DEMANDA', 'COLOR_OFERTA',
+
+    # Constantes de dirección
+    'ARRIBA', 'ABAJO', 'IZQUIERDA', 'DERECHA',
 
     # Decoradores
     'ayuda',

@@ -58,7 +58,7 @@ class ISLM(ModeloEconomico):
     def __init__(self):
         """Inicializa el modelo IS-LM."""
         super().__init__()
-        
+
         # Definir símbolos económicos
         self.Y = symbols('Y')      # Producto/Ingreso
         self.i = symbols('i')      # Tasa de interés
@@ -69,6 +69,37 @@ class ISLM(ModeloEconomico):
         self.M = symbols('M')      # Oferta monetaria
         self.P = symbols('P')      # Nivel de precios
         self.L = symbols('L')      # Demanda de dinero
+
+    def _detectarCaso(self, expresionDemandaDinero) -> str:
+        """
+        Detecta si la demanda de dinero corresponde al caso clásico o keynesiano.
+
+        CASO CLÁSICO: L no depende de i → LM es vertical
+        CASO KEYNESIANO: L sí depende de i → LM tiene pendiente positiva
+        TRAMPA DE LIQUIDEZ: Cuando sensibilidad a i es infinita → LM horizontal
+
+        Args:
+            expresionDemandaDinero: Expresión simbólica de L
+
+        Returns:
+            'CLASICO' o 'KEYNESIANO' o 'TRAMPA_LIQUIDEZ'
+        """
+        # Verificar si la tasa de interés está en la expresión
+        simbolos = expresionDemandaDinero.free_symbols
+        tieneI = self.i in simbolos
+
+        if not tieneI:
+            # Si L no depende de i → Caso Clásico (LM vertical)
+            return 'CLASICO'
+        else:
+            # Derivar respecto a i para ver la sensibilidad
+            sensibilidad = diff(expresionDemandaDinero, self.i)
+
+            # En el caso keynesiano normal, ∂L/∂i es negativa (más i, menos demanda de dinero)
+            # Trampa de liquidez ocurre cuando esta sensibilidad es extremadamente alta
+            # (en términos absolutos)
+            # Por ahora, solo detectamos si es keynesiano (tiene sensibilidad a i)
+            return 'KEYNESIANO'
     
     @explicacion("""
     Calcula el equilibrio macroeconómico resolviendo simultáneamente
@@ -79,7 +110,7 @@ class ISLM(ModeloEconomico):
                   inversion: str,
                   demandaDinero: str,
                   gastoPublico: float,
-                  impuestos: float,
+                  impuestos,  # Puede ser float o str (función de Y)
                   ofertaMonetaria: float,
                   nivelPrecios: float = 1.0) -> Dict[str, float]:
         """
@@ -105,7 +136,9 @@ class ISLM(ModeloEconomico):
                           cuando tienen más ingreso (Y), pero menos cuando i es alta
 
             gastoPublico: Cuánto gasta el gobierno (G) en bienes y servicios
-            impuestos: Cuánto recauda el gobierno (T) en impuestos
+            impuestos: Cuánto recauda el gobierno (T). Puede ser:
+                      - Un número (impuesto de suma fija): impuestos=150
+                      - Una función (impuesto proporcional): impuestos='T = 100 + 0.2Y'
             ofertaMonetaria: Cuánto dinero hay circulando en la economía (M)
             nivelPrecios: Nivel general de precios (P), normalmente = 1
 
@@ -113,10 +146,11 @@ class ISLM(ModeloEconomico):
             Diccionario con los valores de equilibrio:
                 - 'Y*': Producto/Ingreso de equilibrio (PIB de corto plazo)
                 - 'i*': Tasa de interés de equilibrio
-                - 'k': Multiplicador fiscal (cuánto aumenta Y si G sube en 1)
-                - 'm': Multiplicador monetario (cuánto aumenta Y si M sube en 1)
+                - 'β': Multiplicador fiscal (cuánto aumenta Y si G sube en 1)
+                - 'γ': Multiplicador monetario (cuánto aumenta Y si M sube en 1)
                 - 'C*': Consumo total en equilibrio
                 - 'I*': Inversión total en equilibrio
+                - 'T*': Impuestos en equilibrio (si T es función, se calcula; si es constante, se devuelve)
 
         Raises:
             ErrorEquilibrio: Si las curvas no se cruzan (no hay equilibrio)
@@ -134,6 +168,22 @@ class ISLM(ModeloEconomico):
         expresionInversion = ecuacionInversion.rhs if hasattr(ecuacionInversion, 'rhs') else ecuacionInversion
         expresionDemandaDinero = ecuacionDemandaDinero.rhs if hasattr(ecuacionDemandaDinero, 'rhs') else ecuacionDemandaDinero
 
+        # ========== PASO 1.5: MANEJAR IMPUESTOS (FUNCIÓN O CONSTANTE) ==========
+        # Los impuestos pueden ser:
+        # - Una constante: impuestos=150 (impuesto de suma fija)
+        # - Una función: impuestos='T = 100 + 0.2Y' (impuesto proporcional al ingreso)
+        if isinstance(impuestos, str):
+            # El usuario pasó una función, parseamos
+            ecuacionImpuestos = translatex(impuestos)
+            expresionImpuestos = ecuacionImpuestos.rhs if hasattr(ecuacionImpuestos, 'rhs') else ecuacionImpuestos
+            # Sustituimos T por su expresión en la función de consumo
+            expresionConsumo = expresionConsumo.subs(self.T, expresionImpuestos)
+            valorNumericoImpuestos = None  # Lo calcularemos después del equilibrio
+        else:
+            # Es una constante numérica
+            expresionImpuestos = impuestos
+            valorNumericoImpuestos = impuestos
+
         # ========== PASO 2: NORMALIZAR LA TASA DE INTERÉS ==========
         # Permitimos que el usuario use 'r' (por compatibilidad) pero internamente usamos 'i'
         # 'i' representa la tasa de interés NOMINAL (la tasa real 'r' se verá en otros modelos)
@@ -146,6 +196,9 @@ class ISLM(ModeloEconomico):
                     expresionConsumo = expresionConsumo.subs(simbolo, self.i)
                     expresionInversion = expresionInversion.subs(simbolo, self.i)
                     expresionDemandaDinero = expresionDemandaDinero.subs(simbolo, self.i)
+
+        # ========== PASO 2.5: DETECTAR CASO ECONÓMICO (CLÁSICO VS KEYNESIANO) ==========
+        casoEconomico = self._detectarCaso(expresionDemandaDinero)
 
         # ========== PASO 3: PLANTEAR LAS CONDICIONES DE EQUILIBRIO ==========
         # Curva IS: En el mercado de bienes, Oferta = Demanda
@@ -184,17 +237,25 @@ class ISLM(ModeloEconomico):
         multiplicadorMonetario = diff(expresionYestrella, self.M)
 
         # ========== PASO 6: SUSTITUIR VALORES NUMÉRICOS ==========
-        # Reemplazamos las variables G, T, M, P por sus valores concretos
+        # Reemplazamos las variables G, M, P por sus valores concretos
+        # Si T es constante, también lo sustituimos; si es función, ya está integrado
         valoresNumericos = {
             self.G: gastoPublico,
-            self.T: impuestos,
             self.M: ofertaMonetaria,
             self.P: nivelPrecios
         }
 
+        # Solo agregamos T a los valores si es constante (no función)
+        if valorNumericoImpuestos is not None:
+            valoresNumericos[self.T] = valorNumericoImpuestos
+
         # Calculamos Y* e i* numéricamente
         Yestrella = float(expresionYestrella.subs(valoresNumericos))
         iestrella = float(expresionIestrella.subs(valoresNumericos))
+
+        # Si T era una función, calculamos su valor en el equilibrio
+        if valorNumericoImpuestos is None:
+            valorNumericoImpuestos = float(expresionImpuestos.subs(self.Y, Yestrella))
 
         # ========== PASO 7: CALCULAR C* E I* DE EQUILIBRIO ==========
         # Ahora que conocemos Y* e i*, podemos calcular cuánto se consume
@@ -211,7 +272,9 @@ class ISLM(ModeloEconomico):
             'β': float(multiplicadorFiscal.subs(valoresNumericos)),       # Multiplicador fiscal
             'γ': float(multiplicadorMonetario.subs(valoresNumericos)),   # Multiplicador monetario
             'C*': Cestrella,                                                  # Consumo de equilibrio
-            'I*': Iestrella                                                   # Inversión de equilibrio
+            'I*': Iestrella,                                                  # Inversión de equilibrio
+            'T*': valorNumericoImpuestos,                                     # Impuestos en equilibrio
+            'caso': casoEconomico                                             # 'CLASICO' o 'KEYNESIANO'
         }
     
     def resolver(self) -> Dict[str, float]:

@@ -1,37 +1,29 @@
-"""
-╔══════════════════════════════════════════════════════════════════╗
-║                                                                  ║
-║                         OIKOS v0.3.0                             ║
-║              Librería para Economía en Python                    ║
-║                                                                  ║
-╚══════════════════════════════════════════════════════════════════╝
-
-Oikos es una librería académica diseñada para enseñar y entender
-teoría económica mediante código Python.
-
-El código se lee como economía, no como matemática.
-
-Características principales:
-- Parser LaTeX para ecuaciones económicas
-- Gráficos con estilo profesional
-- Sistema de ayuda contextual
-- Validación automática de parámetros
-- Soporte completo en español
-
-Autor: Marcos Jr.
-Licencia: MIT
-Documentación: https://oikos.readthedocs.io/en/latest/manual/
-"""
-
 __version__ = "0.3.0"
 __author__ = "Marcos Jr."
 
 # ============= MICROECONOMÍA =============
 from .microeconomia import (
+    # Mercado
     Demanda,
     Oferta,
     equilibrio,
-    excedentes
+    excedentes,
+    
+    # Teoría del Consumidor
+    FuncionUtilidad,
+    SustitutosPerfectos,
+    ComplementariosPerfectos,
+    CobbDouglas,
+    CuasiLineal,
+    ConcavaRaiz,
+    StoneGeary,
+    PreferenciasSaciadas,
+    CES,
+    BienMalo,
+    BienNeutral,
+    RestriccionPresupuestaria,
+    EleccionOptima,
+    CurvaIndiferencia
 )
 
 # ============= MACROECONOMÍA =============
@@ -60,6 +52,9 @@ from .utilidades import (
     GRIS, NEGRO,
     COLOR_DEMANDA, COLOR_OFERTA,
 
+    # Constantes de dirección
+    ARRIBA, ABAJO, IZQUIERDA, DERECHA,
+
     # Validadores
     validarPositivo,
     validarNoNegativo,
@@ -85,11 +80,27 @@ __all__ = [
     # Versión
     '__version__',
 
-    # Microeconomía
+    # Microeconomía - Mercado
     'Demanda',
     'Oferta',
     'equilibrio',
     'excedentes',
+
+    # Microeconomía - Teoría del Consumidor
+    'FuncionUtilidad',
+    'SustitutosPerfectos',
+    'ComplementariosPerfectos',
+    'CobbDouglas',
+    'CuasiLineal',
+    'ConcavaRaiz',
+    'StoneGeary',
+    'PreferenciasSaciadas',
+    'CES',
+    'BienMalo',
+    'BienNeutral',
+    'RestriccionPresupuestaria',
+    'EleccionOptima',
+    'CurvaIndiferencia',
 
     # Macroeconomía
     'ISLM',
@@ -112,6 +123,9 @@ __all__ = [
     'ROJO2', 'AZUL2', 'VERDE2', 'AMARILLO2',
     'GRIS', 'NEGRO',
     'COLOR_DEMANDA', 'COLOR_OFERTA',
+
+    # Constantes de dirección
+    'ARRIBA', 'ABAJO', 'IZQUIERDA', 'DERECHA',
 
     # Validadores
     'validarPositivo',
