@@ -1,14 +1,7 @@
-# 📚 Manual Completo de OIKOS v0.3.1
-
-**Librería para Economía en Python**
-
-Autor: Marcos Junior Hernández-Moreno
-Licencia: MIT
-Documentación: https://oikos.readthedocs.io/en/latest/manual/
-
+# Manual Completo de OIKOS v0.3.1
 ---
 
-## 🎯 Tabla de Contenidos
+## Tabla de Contenidos
 
 1. [Introducción](#introducción)
 2. [Instalación](#instalación)
