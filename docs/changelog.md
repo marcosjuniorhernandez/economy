@@ -23,6 +23,11 @@ Versión mayor que expande significativamente la librería con **Teoría del Con
 - **Dataclasses especializadas**: `BienEconomico` para representar productos con nombre y unidad
 
 #### Teoría del Consumidor
+- **Clase principal `Consumidor`**: Representa un agente económico que maximiza su utilidad sujeto a restricción presupuestaria
+  - Métodos: `demandarOptima()`, `utilidadAlcanzada()`, `curvaIndiferencia()`, `restriccionPresupuestaria()`
+  - Soporte para cambios en precios e ingreso: `cambiarPrecio()`, `cambiarIngreso()`
+  - Análisis de tipos de bienes (normales vs inferiores)
+  - Método `.graficar()` para visualización de restricción presupuestaria y curvas de indiferencia
 - **Funciones de utilidad**: Clase base `FuncionUtilidad` con métodos para utilidad marginal, TMS y curvas de indiferencia
 - **Funciones implementadas**: `CobbDouglas`, `SustitutosPerfectos`, `ComplementariosPerfectos`, `CuasiLineal`, `CES`, `StoneGeary`, `ConcavaRaiz`
 - **Tipos de bienes**: `BienNeutral`, `BienMalo`, `PreferenciasSaciadas`

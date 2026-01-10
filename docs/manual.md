@@ -7,6 +7,7 @@
 2. [Instalación](#instalación)
 3. [Guía Rápida](#guía-rápida)
 4. [Microeconomía](#microeconomía)
+   - [Consumidor](#consumidor)
    - [Demanda](#demanda)
    - [Oferta](#oferta)
    - [Equilibrio de Mercado](#equilibrio-de-mercado)
@@ -149,6 +150,242 @@ lienzo.graficar()
 ---
 
 ## Microeconomía
+
+### Consumidor
+
+La clase `Consumidor` representa un agente económico que toma decisiones de consumo para maximizar su utilidad sujeto a una restricción presupuestaria.
+
+#### Teoría del consumidor
+
+**Función de Utilidad**: Representa las preferencias del consumidor sobre distintas canastas de bienes.
+
+**Restricción Presupuestaria**: Limita las opciones del consumidor según su ingreso y los precios de los bienes.
+```
+p₁·x₁ + p₂·x₂ = m
+```
+
+**Maximización de Utilidad**: El consumidor elige la canasta que maximiza su utilidad sujeto a su restricción presupuestaria.
+
+#### Creación básica
+
+```python
+from oikos import Consumidor
+
+# Crear consumidor con función de utilidad Cobb-Douglas
+consumidor = Consumidor(
+    utilidad="U = x^0.5 * y^0.5",
+    ingreso=100,
+    precio_bien1=2,
+    precio_bien2=5
+)
+
+# Obtener la demanda óptima
+demanda_optima = consumidor.demandarOptima()
+print(demanda_optima)
+# {'x': 25.0, 'y': 10.0, 'U': 15.81}
+
+# Verificar cuánto gasta
+gasto_total = demanda_optima['x'] * 2 + demanda_optima['y'] * 5
+print(f"Gasto total: ${gasto_total:.2f}")  # $100.00
+```
+
+#### Métodos principales
+
+**`demandarOptima()`**: Encuentra la canasta óptima que maximiza la utilidad
+
+```python
+consumidor = Consumidor(
+    utilidad="U = x^0.6 * y^0.4",
+    ingreso=120,
+    precio_bien1=3,
+    precio_bien2=2
+)
+
+canasta = consumidor.demandarOptima()
+print(f"Consumir {canasta['x']:.2f} unidades del bien X")
+print(f"Consumir {canasta['y']:.2f} unidades del bien Y")
+print(f"Utilidad alcanzada: U = {canasta['U']:.2f}")
+```
+
+**`utilidadAlcanzada(x, y)`**: Calcula la utilidad de una canasta específica
+
+```python
+# ¿Qué utilidad da la canasta (10, 15)?
+u = consumidor.utilidadAlcanzada(10, 15)
+print(f"U(10, 15) = {u:.2f}")
+```
+
+**`curvaIndiferencia(nivel_utilidad, bien)`**: Obtiene puntos de una curva de indiferencia
+
+```python
+# Curva de indiferencia para U = 20
+puntos = consumidor.curvaIndiferencia(nivel_utilidad=20, bien='x')
+# Devuelve lista de puntos (x, y) con utilidad = 20
+```
+
+**`restriccionPresupuestaria()`**: Devuelve la ecuación de la restricción presupuestaria
+
+```python
+restriccion = consumidor.restriccionPresupuestaria()
+print(restriccion)
+# "3x + 2y = 120"
+```
+
+#### Cambio en precios e ingreso
+
+```python
+# Crear consumidor inicial
+consumidor = Consumidor(
+    utilidad="U = x * y",
+    ingreso=100,
+    precio_bien1=2,
+    precio_bien2=4
+)
+
+demanda_inicial = consumidor.demandarOptima()
+print(f"Canasta inicial: x={demanda_inicial['x']:.2f}, y={demanda_inicial['y']:.2f}")
+
+# CAMBIO EN PRECIO: Bien X baja de precio
+consumidor.cambiarPrecio(bien='x', nuevo_precio=1)
+demanda_nueva = consumidor.demandarOptima()
+print(f"Canasta después de que P_x baja: x={demanda_nueva['x']:.2f}, y={demanda_nueva['y']:.2f}")
+
+# CAMBIO EN INGRESO: Aumenta el ingreso
+consumidor.cambiarIngreso(nuevo_ingreso=150)
+demanda_final = consumidor.demandarOptima()
+print(f"Canasta con mayor ingreso: x={demanda_final['x']:.2f}, y={demanda_final['y']:.2f}")
+```
+
+#### Tipos de bienes
+
+```python
+# Analizar si un bien es normal o inferior
+# (comparando cambios en la demanda cuando cambia el ingreso)
+
+consumidor = Consumidor(
+    utilidad="U = x^0.7 * y^0.3",
+    ingreso=100,
+    precio_bien1=2,
+    precio_bien2=3
+)
+
+demanda_m100 = consumidor.demandarOptima()
+
+consumidor.cambiarIngreso(200)
+demanda_m200 = consumidor.demandarOptima()
+
+# Cambio en la demanda
+delta_x = demanda_m200['x'] - demanda_m100['x']
+delta_y = demanda_m200['y'] - demanda_m100['y']
+
+print(f"Cuando ingreso aumenta de $100 a $200:")
+print(f"  Bien X: {demanda_m100['x']:.2f} → {demanda_m200['x']:.2f} (Δ = {delta_x:+.2f})")
+print(f"  Bien Y: {demanda_m100['y']:.2f} → {demanda_m200['y']:.2f} (Δ = {delta_y:+.2f})")
+
+if delta_x > 0:
+    print("  → Bien X es NORMAL (aumenta con el ingreso)")
+else:
+    print("  → Bien X es INFERIOR (disminuye con el ingreso)")
+
+if delta_y > 0:
+    print("  → Bien Y es NORMAL (aumenta con el ingreso)")
+else:
+    print("  → Bien Y es INFERIOR (disminuye con el ingreso)")
+```
+
+#### Graficar restricción presupuestaria y curvas de indiferencia
+
+```python
+from oikos.utilidades import Lienzo, AZUL, ROJO, VERDE
+
+consumidor = Consumidor(
+    utilidad="U = x^0.5 * y^0.5",
+    ingreso=100,
+    precio_bien1=2,
+    precio_bien2=5
+)
+
+# Graficar la restricción presupuestaria y curvas de indiferencia
+consumidor.graficar()
+
+# O graficar manualmente con más control
+lienzo = Lienzo()
+lienzo.configurarEtiquetas(
+    etiquetaX="Bien X",
+    etiquetaY="Bien Y",
+    titulo="Elección del Consumidor"
+)
+
+# Agregar restricción presupuestaria
+# p_x * x + p_y * y = m  →  y = (m - p_x * x) / p_y
+lienzo.agregar(
+    lambda x: (100 - 2*x) / 5,
+    etiqueta="Restricción Presupuestaria",
+    color=AZUL
+)
+
+# Agregar punto óptimo
+optimo = consumidor.demandarOptima()
+lienzo.agregarPunto(
+    x=optimo['x'],
+    y=optimo['y'],
+    color=ROJO,
+    dimension=12,
+    mostrarNombre=True,
+    nombre="E*"
+)
+
+# Agregar curva de indiferencia óptima
+nivel_u = optimo['U']
+puntos_ci = consumidor.curvaIndiferencia(nivel_utilidad=nivel_u, bien='x')
+x_vals, y_vals = zip(*puntos_ci)
+lienzo.agregar(
+    lambda x: consumidor.utilidadInversa(nivel_u, x),
+    etiqueta=f"U = {nivel_u:.2f}",
+    color=VERDE,
+    estiloLinea='--'
+)
+
+lienzo.graficar()
+```
+
+#### Ejemplo completo: Efecto de un impuesto
+
+```python
+# Analizar cómo afecta un impuesto al consumidor
+
+# Estado inicial
+consumidor = Consumidor(
+    utilidad="U = x^0.6 * y^0.4",
+    ingreso=200,
+    precio_bien1=4,
+    precio_bien2=5
+)
+
+print("SIN IMPUESTO:")
+antes = consumidor.demandarOptima()
+print(f"  Canasta: x={antes['x']:.2f}, y={antes['y']:.2f}")
+print(f"  Utilidad: U={antes['U']:.2f}")
+print(f"  Gasto: ${4*antes['x'] + 5*antes['y']:.2f}")
+
+# Se aplica un impuesto de $2 por unidad del bien X
+# Nuevo precio: $4 + $2 = $6
+consumidor.cambiarPrecio(bien='x', nuevo_precio=6)
+
+print("\nCON IMPUESTO ($2 por unidad de X):")
+despues = consumidor.demandarOptima()
+print(f"  Canasta: x={despues['x']:.2f}, y={despues['y']:.2f}")
+print(f"  Utilidad: U={despues['U']:.2f}")
+print(f"  Gasto: ${6*despues['x'] + 5*despues['y']:.2f}")
+
+print("\nEFECTOS DEL IMPUESTO:")
+print(f"  Δx = {despues['x'] - antes['x']:.2f} (consume menos X)")
+print(f"  Δy = {despues['y'] - antes['y']:.2f}")
+print(f"  ΔU = {despues['U'] - antes['U']:.2f} (pierde bienestar)")
+print(f"  Recaudación = ${2 * despues['x']:.2f}")
+```
+
+---
 
 ### Demanda
 
@@ -1701,6 +1938,16 @@ fig.savefig("mi_grafico.png", dpi=300, bbox_inches='tight')
 ## Referencia de API
 
 ### Clases Principales
+
+#### `Consumidor`
+- `__init__(utilidad: str, ingreso: float, precio_bien1: float, precio_bien2: float)`
+- `demandarOptima() -> Dict[str, float]`
+- `utilidadAlcanzada(x: float, y: float) -> float`
+- `curvaIndiferencia(nivel_utilidad: float, bien: str) -> List[Tuple[float, float]]`
+- `restriccionPresupuestaria() -> str`
+- `cambiarPrecio(bien: str, nuevo_precio: float)`
+- `cambiarIngreso(nuevo_ingreso: float)`
+- `graficar(mostrar: bool = True)`
 
 #### `Demanda`
 - `__init__(ecuacion: str)`
