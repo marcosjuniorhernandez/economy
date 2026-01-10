@@ -4,8 +4,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
     longDescription = fh.read()
 
 setup(
-    name="Oikos",
-    version="0.3.0",
+    name="oikos",
+    version="0.3.1",
     author="Marcos Junior Hernández-Moreno",
     author_email="iam.marcoshernandez@gmail.com",
     description="Biblioteca para modelos económicos en Python.",
