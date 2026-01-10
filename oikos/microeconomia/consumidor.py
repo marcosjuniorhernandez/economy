@@ -324,7 +324,7 @@ class SustitutosPerfectos(FuncionUtilidad):
         # Punto óptimo - EN ROJO CON MARCADOR CUADRADO
         if xOpt is not None and yOpt is not None:
             lienzo.agregarPunto(xOpt, yOpt, etiqueta=f"Óptimo ({xOpt:.1f}, {yOpt:.1f})",
-                              color=ROJO, dimension=8, marcador='s', mostrarLineasGuia=True)
+                              color=ROJO, dimension=5, marcador='s', mostrarLineasGuia=True)
 
         lienzo.configurarRango(rangoX=(xMin, xMax*1.1), rangoY=(yMin, yMax*1.1))
         return lienzo.graficar()

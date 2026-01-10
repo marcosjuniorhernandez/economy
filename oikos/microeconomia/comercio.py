@@ -43,3 +43,4 @@ GANANCIAS DEL COMERCIO        +x     -x      -x     +x
 Ejemplo de tabla con rich, linda y grafica, calcular los costos de oportunidad y el termino de intercambio
 """
 
+ """Revisa todas mis carpetas y archvios en especial este de comercio porque vamos a hacer temas de economía internacional, entonces vamos leelos y ve que puedes aplicar a mi archivo recuerda organizar los init para que la imortacion funciones como from oikos import *, leemis comentarios de lo quiero en ese archivo"""
