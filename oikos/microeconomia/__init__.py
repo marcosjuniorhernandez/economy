@@ -1,49 +1,54 @@
 """
 Microeconomía - Análisis de mercados y comportamiento individual.
+
+Este módulo contiene modelos de microeconomía incluyendo teoría del
+mercado, teoría del consumidor, teoría del productor y comercio internacional.
 """
 
-from .mercado import Demanda, Oferta, equilibrio, excedentes
+# Imports locales
+from .comercio import BienEconomico, FactoresEspecificos, FPP, Ricardiano
 from .consumidor import (
-    # Funciones de utilidad
-    FuncionUtilidad,
-    SustitutosPerfectos,
-    ComplementariosPerfectos,
-    CobbDouglas,
-    CuasiLineal,
-    ConcavaRaiz,
-    StoneGeary,
-    PreferenciasSaciadas,
-    CES,
     BienMalo,
     BienNeutral,
-    # Herramientas de análisis
-    RestriccionPresupuestaria,
+    CES,
+    CobbDouglas,
+    ComplementariosPerfectos,
+    ConcavaRaiz,
+    CuasiLineal,
+    CurvaIndiferencia,
     EleccionOptima,
-    CurvaIndiferencia
+    FuncionUtilidad,
+    PreferenciasSaciadas,
+    RestriccionPresupuestaria,
+    StoneGeary,
+    SustitutosPerfectos,
 )
+from .mercado import Demanda, Oferta, equilibrio, excedentes
 
 __all__ = [
     # Mercado
-    'Demanda',
-    'Oferta',
-    'equilibrio',
-    'excedentes',
-
+    "Demanda",
+    "Oferta",
+    "equilibrio",
+    "excedentes",
     # Teoría del Consumidor - Funciones de utilidad
-    'FuncionUtilidad',
-    'SustitutosPerfectos',
-    'ComplementariosPerfectos',
-    'CobbDouglas',
-    'CuasiLineal',
-    'ConcavaRaiz',
-    'StoneGeary',
-    'PreferenciasSaciadas',
-    'CES',
-    'BienMalo',
-    'BienNeutral',
-
-    # Teoría del Consumidor - Herramientas
-    'RestriccionPresupuestaria',
-    'EleccionOptima',
-    'CurvaIndiferencia'
+    "BienMalo",
+    "BienNeutral",
+    "CES",
+    "CobbDouglas",
+    "ComplementariosPerfectos",
+    "ConcavaRaiz",
+    "CuasiLineal",
+    "CurvaIndiferencia",
+    "EleccionOptima",
+    "FuncionUtilidad",
+    "PreferenciasSaciadas",
+    "RestriccionPresupuestaria",
+    "StoneGeary",
+    "SustitutosPerfectos",
+    # Comercio Internacional
+    "BienEconomico",
+    "FactoresEspecificos",
+    "FPP",
+    "Ricardiano",
 ]

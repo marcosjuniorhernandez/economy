@@ -19,3 +19,17 @@ env/
 notes/
 .claude/
 pruebas/
+
+# Modulos en proyección
+oikos/mediciones/
+
+# Archivos de sistema y editores
+.DS_Store
+.vscode/
+.idea/
+
+# Tests y Cobertura
+.pytest_cache/
+nosetests.xml
+coverage.xml
+htmlcov/

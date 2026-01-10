@@ -1,74 +1,110 @@
 """
 Utilidades de Oikos - Herramientas generales.
+
+Este módulo contiene funciones de utilidad para parsear ecuaciones,
+validar parámetros económicos, crear visualizaciones y decorar código
+con información pedagógica.
 """
 
-from .parseador import translatex, despejar, extraerVariables
-from .validadores import (
-    validarPositivo,
-    validarNoNegativo,
-    validarRango,
-    validarPropension,
-    validarElasticidad,
-    validarEcuacion
-)
-from .visuales import (
-    escribir,
-    Lienzo,
-    EstiloGrafico,
-    graficoRapido,
-    # Colores predefinidos - Ahora disponibles sin prefijo
-    ROJO, AZUL, VERDE, AMARILLO, CIAN, MAGENTA,
-    NARANJA, MORADO, ROSA, LIMA,
-    TURQUESA, CELESTE, VIOLETA, CORAL,
-    ROJO2, AZUL2, VERDE2, AMARILLO2,
-    GRIS, NEGRO,
-    COLOR_DEMANDA, COLOR_OFERTA,
-    # Constantes de dirección para alinear ejes
-    ARRIBA, ABAJO, IZQUIERDA, DERECHA
-)
+# Imports locales
 from .decoradores import (
     ayuda,
+    deprecado,
     explicacion,
-    validarEconomico,
     memorizarResultado,
-    deprecado
+    validarEconomico,
+)
+from .parseador import despejar, extraerVariables, translatex
+from .validadores import (
+    validarEcuacion,
+    validarElasticidad,
+    validarNoNegativo,
+    validarPositivo,
+    validarPropension,
+    validarRango,
+)
+from .visuales import (
+    ABAJO,
+    AMARILLO,
+    AMARILLO2,
+    ARRIBA,
+    AZUL,
+    AZUL2,
+    CELESTE,
+    CIAN,
+    COLOR_DEMANDA,
+    COLOR_OFERTA,
+    CORAL,
+    DERECHA,
+    EstiloGrafico,
+    GRIS,
+    IZQUIERDA,
+    Lienzo,
+    LIMA,
+    MAGENTA,
+    MORADO,
+    NARANJA,
+    NEGRO,
+    ROJO,
+    ROJO2,
+    ROSA,
+    TURQUESA,
+    VERDE,
+    VERDE2,
+    VIOLETA,
+    escribir,
+    graficoRapido,
 )
 
 __all__ = [
     # Parseador
-    'translatex',
-    'despejar',
-    'extraerVariables',
-
+    "despejar",
+    "extraerVariables",
+    "translatex",
     # Validadores
-    'validarPositivo',
-    'validarNoNegativo',
-    'validarRango',
-    'validarPropension',
-    'validarElasticidad',
-    'validarEcuacion',
-
+    "validarEcuacion",
+    "validarElasticidad",
+    "validarNoNegativo",
+    "validarPositivo",
+    "validarPropension",
+    "validarRango",
     # Visuales
-    'escribir',
-    'Lienzo',
-    'EstiloGrafico',
-    'graficoRapido',
-
-    # Colores - Todos exportados para uso directo
-    'ROJO', 'AZUL', 'VERDE', 'AMARILLO', 'CIAN', 'MAGENTA',
-    'NARANJA', 'MORADO', 'ROSA', 'LIMA',
-    'TURQUESA', 'CELESTE', 'VIOLETA', 'CORAL',
-    'ROJO2', 'AZUL2', 'VERDE2', 'AMARILLO2',
-    'GRIS', 'NEGRO',
-    'COLOR_DEMANDA', 'COLOR_OFERTA',
-
+    "escribir",
+    "EstiloGrafico",
+    "graficoRapido",
+    "Lienzo",
+    # Colores
+    "AMARILLO",
+    "AMARILLO2",
+    "AZUL",
+    "AZUL2",
+    "CELESTE",
+    "CIAN",
+    "COLOR_DEMANDA",
+    "COLOR_OFERTA",
+    "CORAL",
+    "GRIS",
+    "LIMA",
+    "MAGENTA",
+    "MORADO",
+    "NARANJA",
+    "NEGRO",
+    "ROJO",
+    "ROJO2",
+    "ROSA",
+    "TURQUESA",
+    "VERDE",
+    "VERDE2",
+    "VIOLETA",
     # Constantes de dirección
-    'ARRIBA', 'ABAJO', 'IZQUIERDA', 'DERECHA',
-
+    "ABAJO",
+    "ARRIBA",
+    "DERECHA",
+    "IZQUIERDA",
     # Decoradores
-    'ayuda',
-    'explicacion',
-    'validarEconomico',
-    'memorizarResultado',
-    'deprecado'
+    "ayuda",
+    "deprecado",
+    "explicacion",
+    "memorizarResultado",
+    "validarEconomico",
 ]

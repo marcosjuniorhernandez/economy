@@ -10,7 +10,7 @@ from typing import Callable, Optional
 import inspect
 
 
-def ayuda(descripcion_economica: str, 
+def ayuda(descripcionEconomica: str, 
           supuestos: Optional[list] = None,
           cursos: Optional[list] = None,
           ejemplos: Optional[str] = None):
@@ -21,14 +21,14 @@ def ayuda(descripcion_economica: str,
     económicas directamente desde el código usando help().
     
     Args:
-        descripcion_economica: Explicación del concepto económico
+        descripcionEconomica: Explicación del concepto económico
         supuestos: Lista de supuestos del modelo
         cursos: Lista de cursos donde se usa este concepto
         ejemplos: Código de ejemplo de uso
         
     Ejemplo de uso:
         >>> @ayuda(
-        ...     descripcion_economica="Modelo de equilibrio de mercado competitivo",
+        ...     descripcionEconomica="Modelo de equilibrio de mercado competitivo",
         ...     supuestos=["Competencia perfecta", "Precio flexible"],
         ...     cursos=["Microeconomía I", "Introducción a la Economía"]
         ... )
@@ -40,40 +40,40 @@ def ayuda(descripcion_economica: str,
     """
     def decorador(obj):
         # Construir documentación económica
-        doc_economica = f"""
+        docEconomica = f"""
 
 ╔══════════════════════════════════════════════════════════════════╗
 ║                    OIKOS - AYUDA ECONÓMICA                       ║
 ╚══════════════════════════════════════════════════════════════════╝
 
-{descripcion_economica}
+{descripcionEconomica}
 """
         
         if supuestos:
-            doc_economica += "\n SUPUESTOS DEL MODELO:\n"
+            docEconomica += "\n SUPUESTOS DEL MODELO:\n"
             for i, supuesto in enumerate(supuestos, 1):
-                doc_economica += f"   {i}. {supuesto}\n"
+                docEconomica += f"   {i}. {supuesto}\n"
         
         if cursos:
-            doc_economica += "\n USADO EN:\n"
+            docEconomica += "\n USADO EN:\n"
             for curso in cursos:
-                doc_economica += f"   • {curso}\n"
+                docEconomica += f"   • {curso}\n"
         
         if ejemplos:
-            doc_economica += f"\n EJEMPLO DE USO:\n{ejemplos}\n"
+            docEconomica += f"\n EJEMPLO DE USO:\n{ejemplos}\n"
         
-        doc_economica += "\n" + "─" * 66 + "\n"
+        docEconomica += "\n" + "─" * 66 + "\n"
         
         # Añadir la documentación económica al objeto
         if hasattr(obj, '__doc__'):
-            doc_original = obj.__doc__ or ""
-            obj.__doc__ = doc_economica + doc_original
+            docOriginal = obj.__doc__ or ""
+            obj.__doc__ = docEconomica + docOriginal
         else:
-            obj.__doc__ = doc_economica
+            obj.__doc__ = docEconomica
         
         # Guardar metadata para acceso programático
         obj._oikos_ayuda = {
-            'descripcion': descripcion_economica,
+            'descripcion': descripcionEconomica,
             'supuestos': supuestos or [],
             'cursos': cursos or [],
             'ejemplos': ejemplos
@@ -84,14 +84,14 @@ def ayuda(descripcion_economica: str,
     return decorador
 
 
-def explicacion(texto_explicativo: str):
+def explicacion(textoExplicativo: str):
     """
     Decorador que añade explicación económica a métodos.
     
     Útil para explicar qué hace un método desde la perspectiva económica.
     
     Args:
-        texto_explicativo: Explicación de lo que hace el método económicamente
+        textoExplicativo: Explicación de lo que hace el método económicamente
         
     Ejemplo:
         >>> class Demanda:
@@ -106,12 +106,12 @@ def explicacion(texto_explicativo: str):
             return func(*args, **kwargs)
         
         # Añadir explicación al docstring
-        explicacion_doc = f"\n{'─'*50}\n EXPLICACIÓN ECONÓMICA:\n{texto_explicativo}\n{'─'*50}\n"
+        explicacionDoc = f"\n{'─'*50}\n EXPLICACIÓN ECONÓMICA:\n{textoExplicativo}\n{'─'*50}\n"
         
         if func.__doc__:
-            envoltura.__doc__ = explicacion_doc + func.__doc__
+            envoltura.__doc__ = explicacionDoc + func.__doc__
         else:
-            envoltura.__doc__ = explicacion_doc
+            envoltura.__doc__ = explicacionDoc
         
         return envoltura
     
@@ -139,14 +139,14 @@ def validarEconomico(**validaciones):
             parametros = sig.parameters
             
             # Crear diccionario de argumentos
-            args_dict = {}
-            param_names = list(parametros.keys())
+            argsDict = {}
+            paramNames = list(parametros.keys())
             
             for i, valor in enumerate(args):
-                if i < len(param_names):
-                    args_dict[param_names[i]] = valor
+                if i < len(paramNames):
+                    argsDict[paramNames[i]] = valor
             
-            args_dict.update(kwargs)
+            argsDict.update(kwargs)
             
             # Validar cada parámetro
             from ..utilidades.validadores import (
@@ -156,19 +156,19 @@ def validarEconomico(**validaciones):
                 validarPropension
             )
             
-            for nombre_param, tipo_validacion in validaciones.items():
-                if nombre_param in args_dict:
-                    valor = args_dict[nombre_param]
+            for nombreParam, tipoValidacion in validaciones.items():
+                if nombreParam in argsDict:
+                    valor = argsDict[nombreParam]
                     
-                    if tipo_validacion == 'positivo':
-                        validarPositivo(valor, nombre_param)
-                    elif tipo_validacion == 'no_negativo':
-                        validarNoNegativo(valor, nombre_param)
-                    elif tipo_validacion == 'propension':
-                        validarPropension(valor, nombre_param)
-                    elif isinstance(tipo_validacion, tuple):
+                    if tipoValidacion == 'positivo':
+                        validarPositivo(valor, nombreParam)
+                    elif tipoValidacion == 'no_negativo':
+                        validarNoNegativo(valor, nombreParam)
+                    elif tipoValidacion == 'propension':
+                        validarPropension(valor, nombreParam)
+                    elif isinstance(tipoValidacion, tuple):
                         # Rango: (min, max)
-                        validarRango(valor, tipo_validacion[0], tipo_validacion[1], nombre_param)
+                        validarRango(valor, tipoValidacion[0], tipoValidacion[1], nombreParam)
             
             return func(*args, **kwargs)
         
@@ -184,8 +184,8 @@ def memorizarResultado(func):
     Útil para equilibrios que se calculan múltiples veces.
     
     Ejemplo:
-        >>> @memorizar_resultado
-        ... def calcular_equilibrio(a, b, c):
+        >>> @memorizarResultado
+        ... def calcularEquilibrio(a, b, c):
         ...     # Cálculo costoso...
         ...     return resultado
     """

@@ -14,7 +14,7 @@ from ..utilidades.decoradores import ayuda, explicacion
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     El modelo IS-LM representa el equilibrio macroeconómico de corto plazo
     en una economía cerrada. Combina:
     
@@ -353,7 +353,7 @@ class ISLM(ModeloEconomico):
             ...     impuestos=150,
             ...     ofertaMonetariaInicial=200
             ... )
-            >>> print(f"El PIB aumentó en: {resultado['cambios']['$\Delta Y$']}")
+            >>> print(f"El PIB aumentó en: {resultado['cambios'][r'$\\Delta Y$']}")
         """
         # Validar que el tipo sea correcto
         tipoNormalizado = tipo.upper()
@@ -393,11 +393,11 @@ class ISLM(ModeloEconomico):
         # ========== PASO 4: CALCULAR LOS CAMBIOS (DELTAS) ==========
         # Comparamos el equilibrio final con el inicial
         cambios = {
-            r'$\Delta Y$': equilibrioFinal['Y*'] - equilibrioInicial['Y*'],   # Cambio en PIB
-            r'$\Delta i$': equilibrioFinal['i*'] - equilibrioInicial['i*'],   # Cambio en tasa de interés
-            r'$\Delta C$': equilibrioFinal['C*'] - equilibrioInicial['C*'],   # Cambio en consumo
-            r'$\Delta I$': equilibrioFinal['I*'] - equilibrioInicial['I*'],   # Cambio en inversión
-            r'$\Delta M$': magnitud if tipoNormalizado == "EXPANSIVA" else -magnitud  # Cambio en M
+            r'$\\Delta Y$': equilibrioFinal['Y*'] - equilibrioInicial['Y*'],   # Cambio en PIB
+            r'$\\Delta i$': equilibrioFinal['i*'] - equilibrioInicial['i*'],   # Cambio en tasa de interés
+            r'$\\Delta C$': equilibrioFinal['C*'] - equilibrioInicial['C*'],   # Cambio en consumo
+            r'$\\Delta I$': equilibrioFinal['I*'] - equilibrioInicial['I*'],   # Cambio en inversión
+            r'$\\Delta M$': magnitud if tipoNormalizado == "EXPANSIVA" else -magnitud  # Cambio en M
         }
 
         # ========== RETORNAR RESULTADOS COMPLETOS ==========
@@ -408,7 +408,7 @@ class ISLM(ModeloEconomico):
             'cambios': cambios,
             # Nota: Política monetaria normalmente NO causa efecto expulsión
             # (la inversión sube porque r baja en política expansiva)
-            'efectoExpulsion': cambios[r'$\Delta I$'] < 0
+            'efectoExpulsion': cambios[r'$\\Delta I$'] < 0
         }
 
     def politicaFiscal(self,
@@ -509,11 +509,11 @@ class ISLM(ModeloEconomico):
 
         # ========== PASO 4: CALCULAR LOS CAMBIOS (DELTAS) ==========
         cambios = {
-            r'$\Delta Y$': equilibrioFinal['Y*'] - equilibrioInicial['Y*'],   # Cambio en PIB
-            r'$\Delta i$': equilibrioFinal['i*'] - equilibrioInicial['i*'],   # Cambio en tasa de interés
-            r'$\Delta C$': equilibrioFinal['C*'] - equilibrioInicial['C*'],   # Cambio en consumo
-            r'$\Delta I$': equilibrioFinal['I*'] - equilibrioInicial['I*'],   # Cambio en inversión
-            r'$\Delta G$': magnitud if tipoNormalizado == "EXPANSIVA" else -magnitud  # Cambio en G
+            r'$\\Delta Y$': equilibrioFinal['Y*'] - equilibrioInicial['Y*'],   # Cambio en PIB
+            r'$\\Delta i$': equilibrioFinal['i*'] - equilibrioInicial['i*'],   # Cambio en tasa de interés
+            r'$\\Delta C$': equilibrioFinal['C*'] - equilibrioInicial['C*'],   # Cambio en consumo
+            r'$\\Delta I$': equilibrioFinal['I*'] - equilibrioInicial['I*'],   # Cambio en inversión
+            r'$\\Delta G$': magnitud if tipoNormalizado == "EXPANSIVA" else -magnitud  # Cambio en G
         }
 
         # ========== PASO 5: DETECTAR EFECTO EXPULSIÓN (CROWDING-OUT) ==========
@@ -521,18 +521,18 @@ class ISLM(ModeloEconomico):
         # - Política EXPANSIVA (G↑) pero la inversión privada CAE (I↓)
         # - Política CONTRACTIVA (G↓) pero la inversión privada SUBE (I↑)
         hayEfectoExpulsion = False
-        if tipoNormalizado == "EXPANSIVA" and cambios[r'$\Delta I$'] < 0:
+        if tipoNormalizado == "EXPANSIVA" and cambios[r'$\\Delta I$'] < 0:
             # G subió pero I bajó → hay crowding-out
             hayEfectoExpulsion = True
-        elif tipoNormalizado == "CONTRACTIVA" and cambios[r'$\Delta I$'] > 0:
+        elif tipoNormalizado == "CONTRACTIVA" and cambios[r'$\\Delta I$'] > 0:
             # G bajó pero I subió → hay crowding-out inverso
             hayEfectoExpulsion = True
 
         # Calcular qué proporción del gasto público "expulsa" inversión privada
         # Por ejemplo, si proporcion=0.5, significa que por cada $1 que gasta
         # el gobierno, la inversión privada cae $0.50
-        if hayEfectoExpulsion and cambios[r'$\Delta G$'] != 0:
-            proporcionExpulsion = abs(cambios[r'$\Delta I$'] / cambios[r'$\Delta G$'])
+        if hayEfectoExpulsion and cambios[r'$\\Delta G$'] != 0:
+            proporcionExpulsion = abs(cambios[r'$\\Delta I$'] / cambios[r'$\\Delta G$'])
         else:
             proporcionExpulsion = 0
 

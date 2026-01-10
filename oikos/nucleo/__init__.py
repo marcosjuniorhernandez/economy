@@ -1,23 +1,28 @@
 """
 Núcleo de Oikos - Clases base y excepciones.
+
+Este módulo contiene las clases abstractas base que definen la estructura
+común de todos los modelos económicos, así como el sistema de excepciones
+personalizado para manejo de errores.
 """
 
-from .base import ModeloEconomico, FuncionEconomica, MercadoBase
+# Imports locales
+from .base import FuncionEconomica, MercadoBase, ModeloEconomico
 from .excepciones import (
+    ErrorEquilibrio,
+    ErrorGrafico,
     ErrorOikos,
     ErrorParseador,
-    ErrorEquilibrio,
     ErrorValidacion,
-    ErrorGrafico
 )
 
 __all__ = [
-    'ModeloEconomico',
-    'FuncionEconomica',
-    'MercadoBase',
-    'ErrorOikos',
-    'ErrorParseador',
-    'ErrorEquilibrio',
-    'ErrorValidacion',
-    'ErrorGrafico'
+    "FuncionEconomica",
+    "MercadoBase",
+    "ModeloEconomico",
+    "ErrorEquilibrio",
+    "ErrorGrafico",
+    "ErrorOikos",
+    "ErrorParseador",
+    "ErrorValidacion",
 ]

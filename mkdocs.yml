@@ -46,14 +46,10 @@ theme:
 
 # Esto separa las secciones con títulos en negrita en el lateral
 nav:
-  - Instalación: 
-    - index.md
-  - Tutoriales & Guías:
-    - Manual de uso: manual.md
-    - Manual de visualización: manual2.md
-  - Referencia:
-    - Registro de cambios: changelog.md
-    - Contribuyendo: contributing.md
+  - Instalación: index.md
+  - Manual de uso: manual.md
+  - Cómo contribuir: contributing.md
+  - Registro de cambios: changelog.md
 
 markdown_extensions:
   - admonition

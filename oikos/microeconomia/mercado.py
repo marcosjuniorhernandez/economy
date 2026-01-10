@@ -17,7 +17,7 @@ from ..utilidades.validadores import validarPositivo, validarNoNegativo
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     La Demanda representa la relación entre el precio de un bien y la cantidad
     que los consumidores están dispuestos a comprar en un periodo determinado.
     
@@ -102,15 +102,15 @@ class Demanda:
 
         # Sustituimos el precio
         cantidadExpresion = solucion[0]
-        cantidad_simbolica = cantidadExpresion.subs(self.P, precio)
+        cantidadSimbolica = cantidadExpresion.subs(self.P, precio)
 
         # Forzar evaluación numérica y filtrar complejos
         from sympy import re, im, N
-        cantidad_simbolica = N(cantidad_simbolica)
+        cantidadSimbolica = N(cantidadSimbolica)
 
         # Verificar si tiene parte imaginaria
-        parte_imaginaria = im(cantidad_simbolica)
-        if abs(float(parte_imaginaria)) > 1e-10:
+        parteImaginaria = im(cantidadSimbolica)
+        if abs(float(parteImaginaria)) > 1e-10:
             raise ErrorValidacion(
                 "demanda",
                 f"La cantidad para P={precio} es un número complejo. "
@@ -118,10 +118,10 @@ class Demanda:
             )
 
         # Tomar solo la parte real
-        cantidad_valor = float(re(cantidad_simbolica))
+        cantidadValor = float(re(cantidadSimbolica))
 
         # La cantidad no puede ser negativa
-        return max(0, cantidad_valor)
+        return max(0, cantidadValor)
     
     @explicacion("Calcula el precio dado una cantidad específica")
     def precio(self, cantidad: float) -> float:
@@ -148,16 +148,16 @@ class Demanda:
             raise ErrorValidacion("demanda", "No se pudo despejar el precio")
 
         # Sustituimos la cantidad
-        precio_expr = solucion[0]
-        precio_simbolico = precio_expr.subs(self.Q, cantidad)
+        precioExpr = solucion[0]
+        precioSimbolico = precioExpr.subs(self.Q, cantidad)
 
         # Forzar evaluación numérica y filtrar complejos
         from sympy import re, im, N
-        precio_simbolico = N(precio_simbolico)
+        precioSimbolico = N(precioSimbolico)
 
         # Verificar si tiene parte imaginaria
-        parte_imaginaria = im(precio_simbolico)
-        if abs(float(parte_imaginaria)) > 1e-10:
+        parteImaginaria = im(precioSimbolico)
+        if abs(float(parteImaginaria)) > 1e-10:
             raise ErrorValidacion(
                 "demanda",
                 f"El precio para Q={cantidad} es un número complejo. "
@@ -165,9 +165,9 @@ class Demanda:
             )
 
         # Tomar solo la parte real
-        precio_valor = float(re(precio_simbolico))
+        precioValor = float(re(precioSimbolico))
 
-        return max(0, precio_valor)
+        return max(0, precioValor)
     
     @explicacion("""
     Calcula la elasticidad precio de la demanda en un punto.
@@ -288,7 +288,7 @@ class Demanda:
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     La Oferta representa la relación entre el precio de un bien y la cantidad
     que los productores están dispuestos a vender en un periodo determinado.
     
@@ -373,15 +373,15 @@ class Oferta:
 
         # Sustituimos el precio
         cantidadExpresion = solucion[0]
-        cantidad_simbolica = cantidadExpresion.subs(self.P, precio)
+        cantidadSimbolica = cantidadExpresion.subs(self.P, precio)
 
         # Forzar evaluación numérica y filtrar complejos
         from sympy import re, im, N
-        cantidad_simbolica = N(cantidad_simbolica)
+        cantidadSimbolica = N(cantidadSimbolica)
 
         # Verificar si tiene parte imaginaria
-        parte_imaginaria = im(cantidad_simbolica)
-        if abs(float(parte_imaginaria)) > 1e-10:
+        parteImaginaria = im(cantidadSimbolica)
+        if abs(float(parteImaginaria)) > 1e-10:
             raise ErrorValidacion(
                 "oferta",
                 f"La cantidad para P={precio} es un número complejo. "
@@ -389,10 +389,10 @@ class Oferta:
             )
 
         # Tomar solo la parte real
-        cantidad_valor = float(re(cantidad_simbolica))
+        cantidadValor = float(re(cantidadSimbolica))
 
         # La cantidad no puede ser negativa
-        return max(0, cantidad_valor)
+        return max(0, cantidadValor)
     
     @explicacion("Calcula el precio dado una cantidad específica")
     def precio(self, cantidad: float) -> float:
@@ -419,16 +419,16 @@ class Oferta:
             raise ErrorValidacion("oferta", "No se pudo despejar el precio")
 
         # Sustituimos la cantidad
-        precio_expr = solucion[0]
-        precio_simbolico = precio_expr.subs(self.Q, cantidad)
+        precioExpr = solucion[0]
+        precioSimbolico = precioExpr.subs(self.Q, cantidad)
 
         # Forzar evaluación numérica y filtrar complejos
         from sympy import re, im, N
-        precio_simbolico = N(precio_simbolico)
+        precioSimbolico = N(precioSimbolico)
 
         # Verificar si tiene parte imaginaria
-        parte_imaginaria = im(precio_simbolico)
-        if abs(float(parte_imaginaria)) > 1e-10:
+        parteImaginaria = im(precioSimbolico)
+        if abs(float(parteImaginaria)) > 1e-10:
             raise ErrorValidacion(
                 "oferta",
                 f"El precio para Q={cantidad} es un número complejo. "
@@ -436,9 +436,9 @@ class Oferta:
             )
 
         # Tomar solo la parte real
-        precio_valor = float(re(precio_simbolico))
+        precioValor = float(re(precioSimbolico))
 
-        return max(0, precio_valor)
+        return max(0, precioValor)
     
     @explicacion("""
     Calcula la elasticidad precio de la oferta en un punto.
@@ -558,7 +558,7 @@ class Oferta:
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     El Equilibrio de Mercado ocurre cuando la cantidad demandada iguala
     la cantidad ofrecida. En este punto:
     
@@ -689,20 +689,20 @@ def equilibrio(oferta: Oferta, demanda: Demanda) -> Dict[str, float]:
         )
 
     # Tomar solo las partes reales
-    cantidad_equilibrio = float(re(cantidad_sym))
-    precio_equilibrio = float(re(precio_sym))
+    cantidadEquilibrio = float(re(cantidad_sym))
+    precioEquilibrio = float(re(precio_sym))
 
     # Validamos que sean valores positivos
-    if cantidad_equilibrio < 0 or precio_equilibrio < 0:
+    if cantidadEquilibrio < 0 or precioEquilibrio < 0:
         raise ErrorEquilibrio(
             f"El equilibrio calculado tiene valores negativos: "
-            f"P* = {precio_equilibrio:.4f}, Q* = {cantidad_equilibrio:.4f}. "
+            f"P* = {precioEquilibrio:.4f}, Q* = {cantidadEquilibrio:.4f}. "
             f"Verifica las ecuaciones de oferta y demanda."
         )
 
     return {
-        'P*': precio_equilibrio,
-        'Q*': cantidad_equilibrio
+        'P*': precioEquilibrio,
+        'Q*': cantidadEquilibrio
     }
 
 
@@ -778,19 +778,19 @@ def excedentes(oferta: Oferta,
         # Excedente del Consumidor: ∫[0 to Q*] (P_d(Q) - P*) dQ
         # Simplificado: ∫[0 to Q*] P_d(Q) dQ - P* × Q*
         integral_demanda = integrate(precio_demanda, (Q, 0, cantidad))
-        excedente_consumidor = float(integral_demanda - precio * cantidad)
+        excedenteConsumidor = float(integral_demanda - precio * cantidad)
 
         # Excedente del Productor: ∫[0 to Q*] (P* - P_s(Q)) dQ
         # Simplificado: P* × Q* - ∫[0 to Q*] P_s(Q) dQ
         integral_oferta = integrate(precio_oferta, (Q, 0, cantidad))
-        excedente_productor = float(precio * cantidad - integral_oferta)
+        excedenteProductor = float(precio * cantidad - integral_oferta)
 
         # Excedente Social
-        excedente_social = excedente_consumidor + excedente_productor
+        excedente_social = excedenteConsumidor + excedenteProductor
 
         return {
-            'EC': round(excedente_consumidor, 2),
-            'EP': round(excedente_productor, 2),
+            'EC': round(excedenteConsumidor, 2),
+            'EP': round(excedenteProductor, 2),
             'ES': round(excedente_social, 2),
             'P': precio,
             'Q': cantidad

@@ -154,8 +154,8 @@ class FuncionUtilidad:
 
         # Determinar rango de x según el tipo de función
         if isinstance(self, StoneGeary):
-            # Stone-Geary: empezar desde γₓ para evitar valores inválidos
-            xInicio = max(self.γₓ + 0.01, xMin)
+            # Stone-Geary: empezar desde γx para evitar valores inválidos
+            xInicio = max(self.γx + 0.01, xMin)
         elif isinstance(self, (SustitutosPerfectos, CES)):
             # Sustitutos perfectos y CES: empezar desde 0 para mostrar toda la línea
             xInicio = 0
@@ -173,9 +173,9 @@ class FuncionUtilidad:
                 mask = (yValores >= 0) & ~np.isnan(yValores) & ~np.isinf(yValores)
                 mask = mask & (yValores <= yMax * 1.5)
 
-                # Para Stone-Geary, también filtrar y < γᵧ
+                # Para Stone-Geary, también filtrar y < γγ
                 if isinstance(self, StoneGeary):
-                    mask = mask & (yValores >= self.γᵧ)
+                    mask = mask & (yValores >= self.γγ)
 
                 xValores_filtrados = xValores[mask]
                 yValores_filtrados = yValores[mask]
@@ -190,14 +190,14 @@ class FuncionUtilidad:
         # Punto óptimo
         if xOpt and yOpt:
             lienzo.agregarPunto(xOpt, yOpt, etiqueta=f"Óptimo ({xOpt:.1f}, {yOpt:.1f})",
-                              color=ROJO, dimension=5, mostrarLineasGuia=True)
+                              color='#000000', dimension=5, mostrarLineasGuia=True)
 
         lienzo.configurarRango(rangoX=(xMin, xMax*1.1), rangoY=(yMin, yMax*1.1))
         return lienzo.graficar()
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     Los sustitutos perfectos son bienes que el consumidor considera completamente
     intercambiables entre sí. La tasa de sustitución entre ellos es constante.
 
@@ -362,7 +362,7 @@ class SustitutosPerfectos(FuncionUtilidad):
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     Los complementarios perfectos son bienes que deben consumirse en proporciones
     fijas. El consumidor no obtiene utilidad adicional de tener más de uno sin
     aumentar el otro en la proporción adecuada.
@@ -494,14 +494,14 @@ class ComplementariosPerfectos(FuncionUtilidad):
         # Punto óptimo
         if xOpt and yOpt:
             lienzo.agregarPunto(xOpt, yOpt, etiqueta=f"Óptimo ({xOpt:.1f}, {yOpt:.1f})",
-                              color=ROJO, dimension=5, mostrarLineasGuia=False)
+                              color=ROJO, dimension=5, mostrarLineasGuia=True)
 
         lienzo.configurarRango(rangoX=(xMin, xMax*1.1), rangoY=(yMin, yMax*1.1))
         return lienzo.graficar()
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     La función Cobb-Douglas es una de las más utilizadas en economía.
     Representa preferencias donde el consumidor gasta una proporción constante
     de su ingreso en cada bien, independientemente del precio.
@@ -565,7 +565,7 @@ class CobbDouglas(FuncionUtilidad):
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     Las preferencias cuasilineales representan situaciones donde el consumidor
     tiene preferencias no lineales sobre un bien (X) pero lineales sobre el otro (Y).
 
@@ -608,7 +608,7 @@ class CuasiLineal(FuncionUtilidad):
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     Función de utilidad con raíces cuadradas en ambos bienes.
     Representa preferencias simétricas con utilidades marginales decrecientes.
     """,
@@ -647,7 +647,7 @@ class ConcavaRaiz(FuncionUtilidad):
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     La función Stone-Geary es una generalización de Cobb-Douglas que incluye
     niveles de subsistencia o consumo mínimo requerido para cada bien.
 
@@ -663,51 +663,51 @@ class StoneGeary(FuncionUtilidad):
     """
     Función de utilidad Stone-Geary.
 
-    U(x, y) = (x - γₓ)^α · (y - γᵧ)^β
+    U(x, y) = (x - γx)^α · (y - γγ)^β
 
-    donde γₓ, γᵧ son cantidades de subsistencia.
+    donde γx, γγ son cantidades de subsistencia.
 
     Args:
         α: Exponente del bien X (por defecto 0.5)
         β: Exponente del bien Y (por defecto 0.5)
-        γₓ: Cantidad de subsistencia de X (por defecto 0)
-        γᵧ: Cantidad de subsistencia de Y (por defecto 0)
+        γx: Cantidad de subsistencia de X (por defecto 0)
+        γγ: Cantidad de subsistencia de Y (por defecto 0)
     """
 
     def __init__(self, α: float = 0.5, β: float = 0.5,
-                 γₓ: float = 0, γᵧ: float = 0):
+                 γx: float = 0, γγ: float = 0):
         super().__init__("Stone-Geary")
         self.α = validarPositivo(α, "α")
         self.β = validarPositivo(β, "β")
-        self.γₓ = validarNoNegativo(γₓ, "γₓ")
-        self.γᵧ = validarNoNegativo(γᵧ, "γᵧ")
+        self.γx = validarNoNegativo(γx, "γx")
+        self.γγ = validarNoNegativo(γγ, "γγ")
 
     def utilidad(self, x: float, y: float) -> float:
         x = validarNoNegativo(x, "x")
         y = validarNoNegativo(y, "y")
-        xAjustado = x - self.γₓ
-        yAjustado = y - self.γᵧ
+        xAjustado = x - self.γx
+        yAjustado = y - self.γγ
         if xAjustado <= 0 or yAjustado <= 0:
             return -np.inf
         return (xAjustado ** self.α) * (yAjustado ** self.β)
 
     def utilidadMarginalX(self, x: float, y: float) -> float:
-        xAjustado = x - self.γₓ
-        yAjustado = y - self.γᵧ
+        xAjustado = x - self.γx
+        yAjustado = y - self.γγ
         if xAjustado <= 0 or yAjustado <= 0:
             return 0
         return self.α * (xAjustado ** (self.α - 1)) * (yAjustado ** self.β)
 
     def utilidadMarginalY(self, x: float, y: float) -> float:
-        xAjustado = x - self.γₓ
-        yAjustado = y - self.γᵧ
+        xAjustado = x - self.γx
+        yAjustado = y - self.γγ
         if xAjustado <= 0 or yAjustado <= 0:
             return 0
         return self.β * (xAjustado ** self.α) * (yAjustado ** (self.β - 1))
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     Las preferencias saciadas representan la existencia de un punto de saciedad
     o "punto bienhechor" donde el consumidor alcanza su máxima utilidad.
 
@@ -839,7 +839,7 @@ class PreferenciasSaciadas(FuncionUtilidad):
         # Marcar el punto de saciedad
         lienzo.agregarPunto(self.xÓptimo, self.yÓptimo,
                           etiqueta=f"Saciedad ({self.xÓptimo}, {self.yÓptimo})",
-                          color=AMARILLO, dimension=10, marcador='*', mostrarLineasGuia=False)
+                          color=AZUL, dimension=10, marcador='o', mostrarLineasGuia=False)
 
         # Punto óptimo (si hay restricción)
         if xOpt and yOpt:
@@ -851,7 +851,7 @@ class PreferenciasSaciadas(FuncionUtilidad):
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     La función CES (Constant Elasticity of Substitution) es una familia flexible
     de funciones de utilidad que incluye como casos especiales a Cobb-Douglas,
     sustitutos perfectos y complementarios perfectos.
@@ -932,7 +932,7 @@ class CES(FuncionUtilidad):
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     Un bien malo (o "bad") es aquel cuyo consumo reduce la utilidad del consumidor.
     A diferencia de los bienes normales, el consumidor prefiere tener menos de este bien.
 
@@ -969,7 +969,7 @@ class BienMalo(FuncionUtilidad):
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     Un bien neutral es aquel que no afecta la utilidad del consumidor.
     El consumidor es indiferente a tener más o menos de este bien.
 
@@ -1005,7 +1005,7 @@ class BienNeutral(FuncionUtilidad):
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     La restricción presupuestaria representa todas las combinaciones de bienes
     que el consumidor puede adquirir con su ingreso dado los precios de mercado.
 
@@ -1081,7 +1081,7 @@ class RestriccionPresupuestaria:
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     La elección óptima del consumidor es la canasta que maximiza su utilidad
     sujeto a su restricción presupuestaria.
 
@@ -1201,7 +1201,7 @@ class EleccionOptima:
 
 
 @ayuda(
-    descripcion_economica="""
+    descripcionEconomica="""
     Las curvas de indiferencia representan todas las combinaciones de bienes
     que proporcionan el mismo nivel de utilidad al consumidor.
 
@@ -1250,9 +1250,9 @@ class CurvaIndiferencia:
             Array con valores de y correspondientes
         """
         yValores = []
-        for x_val in xValores:
+        for xVal in xValores:
             # Convertir x a float para evitar problemas con validadores
-            x_float = float(x_val)
+            x_float = float(xVal)
 
             # Buscar y tal que U(x, y) = nivelUtilidad
             def ecuacion(y_array):

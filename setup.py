@@ -4,14 +4,15 @@ with open("README.md", "r", encoding="utf-8") as fh:
     longDescription = fh.read()
 
 setup(
-    name="oikos",
+    name="Oikos",
     version="0.3.0",
-    author="Marcos Jr.",
+    author="Marcos Junior Hernández-Moreno",
     author_email="iam.marcoshernandez@gmail.com",
-    description="Library for economic models in Python.",
+    description="Biblioteca para modelos económicos en Python.",
     long_description=longDescription,
     long_description_content_type="text/markdown",
-    url="https://github.com/marcosjuniorhernandez/economy", 
+    url="https://github.com/marcosjuniorhernandez/economy",
+    
     project_urls={
         "Documentation": "https://oikos.readthedocs.io/en/latest/",
         "Source": "https://github.com/marcosjuniorhernandez/economy",
@@ -40,9 +41,11 @@ setup(
     install_requires=[
         "numpy",
         "sympy",
+        "scipy",
         "latex2sympy2",
         "ipython",
-        "matplotlib"
+        "matplotlib",
+        "rich"
     ],
     
     python_requires=">=3.8"
