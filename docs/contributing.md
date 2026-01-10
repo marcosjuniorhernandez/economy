@@ -220,7 +220,7 @@ class NombreClase:
 
 ## Prioridades del Proyecto
 
-Actualmente, **oikos v0.3.0** se enfoca en:
+Actualmente, **oikos v0.3.1** se enfoca en:
 
 ### Alta Prioridad
 - Corrección de bugs en funcionalidades existentes

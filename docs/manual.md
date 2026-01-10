@@ -1,4 +1,4 @@
-# 📚 Manual Completo de OIKOS v0.3.0
+# 📚 Manual Completo de OIKOS v0.3.1
 
 **Librería para Economía en Python**
 
@@ -24,18 +24,24 @@ Documentación: https://oikos.readthedocs.io/en/latest/manual/
    - [Política Fiscal](#política-fiscal)
    - [Política Monetaria](#política-monetaria)
    - [Multiplicadores](#multiplicadores)
-6. [Visualización](#visualización)
+6. [Comercio Internacional](#comercio-internacional)
+   - [Frontera de Posibilidades de Producción (FPP)](#frontera-de-posibilidades-de-producción-fpp)
+   - [Modelo Ricardiano](#modelo-ricardiano)
+   - [Ventaja Absoluta vs Comparativa](#ventaja-absoluta-vs-comparativa)
+   - [Términos de Intercambio](#términos-de-intercambio)
+   - [Modelo de Factores Específicos](#modelo-de-factores-específicos)
+7. [Visualización](#visualización)
    - [Lienzo Simple](#lienzo-simple)
    - [Lienzo Matricial](#lienzo-matricial)
    - [Estilos Personalizados](#estilos-personalizados)
    - [Rellenos y Sombreado](#rellenos-y-sombreado)
-7. [Utilidades](#utilidades)
+8. [Utilidades](#utilidades)
    - [Parseador LaTeX](#parseador-latex)
    - [Validadores](#validadores)
    - [Decoradores](#decoradores)
-8. [Ejemplos Avanzados](#ejemplos-avanzados)
-9. [FAQ](#faq)
-10. [Referencia de API](#referencia-de-api)
+9. [Ejemplos Avanzados](#ejemplos-avanzados)
+10. [FAQ](#faq)
+11. [Referencia de API](#referencia-de-api)
 
 ---
 
@@ -100,7 +106,7 @@ pip install oikos
 ### Instalación desde el código fuente
 
 ```bash
-git clone https://github.com/tu-usuario/oikos.git
+git clone https://github.com/marcosjuniorhernandez/economy.git
 cd oikos
 pip install -e .
 ```
@@ -709,6 +715,348 @@ else:
 
 ---
 
+## Comercio Internacional
+
+El módulo de comercio internacional implementa los modelos clásicos de comercio basados en ventajas comparativas y absolutas.
+
+### Frontera de Posibilidades de Producción (FPP)
+
+La Frontera de Posibilidades de Producción muestra las combinaciones máximas de dos bienes que una economía puede producir con sus recursos disponibles.
+
+#### Teoría económica
+
+**Concepto**: La FPP representa todas las combinaciones eficientes de dos bienes que se pueden producir con recursos fijos y tecnología dada.
+
+**Pendiente de la FPP**: Representa el **costo de oportunidad** de producir un bien en términos del otro bien que se debe sacrificar.
+
+**Puntos en la FPP**:
+- **Sobre la frontera**: Producción eficiente (pleno empleo de recursos)
+- **Dentro de la frontera**: Producción ineficiente (desempleo o recursos no utilizados)
+- **Fuera de la frontera**: Inalcanzable con los recursos actuales
+
+#### Creación básica
+
+```python
+from oikos import BienEconomico, FPP
+
+# Definir los bienes
+tela = BienEconomico("Tela", "metros")
+vino = BienEconomico("Vino", "litros")
+
+# Crear FPP para España
+# España puede producir máximo 100 metros de Tela o 50 litros de Vino
+fpp_espana = FPP(
+    bien1=tela,
+    bien2=vino,
+    max_bien1=100,  # Producción máxima de tela
+    max_bien2=50,   # Producción máxima de vino
+    nombre_pais="España"
+)
+
+# Calcular costo de oportunidad
+co_tela = fpp_espana.costoOportunidad(bien=tela)
+print(f"Costo de oportunidad de 1 metro de Tela: {co_tela} litros de Vino")
+# Salida: Costo de oportunidad de 1 metro de Tela: 0.5 litros de Vino
+
+co_vino = fpp_espana.costoOportunidad(bien=vino)
+print(f"Costo de oportunidad de 1 litro de Vino: {co_vino} metros de Tela")
+# Salida: Costo de oportunidad de 1 litro de Vino: 2.0 metros de Tela
+```
+
+#### Interpretación del costo de oportunidad
+
+```python
+# Si España produce 1 metro más de Tela, debe renunciar a 0.5 litros de Vino
+# Si España produce 1 litro más de Vino, debe renunciar a 2 metros de Tela
+
+# Verificar si una producción es factible
+es_factible = fpp_espana.produccionFactible(
+    cantidad_bien1=50,  # 50 metros de tela
+    cantidad_bien2=25   # 25 litros de vino
+)
+print(f"¿Es factible producir (50, 25)? {es_factible}")  # True
+
+# Calcular la máxima producción de vino dada una cantidad de tela
+tela_producida = 60
+vino_max = fpp_espana.produccionBien2DadaBien1(tela_producida)
+print(f"Si producimos {tela_producida} metros de tela, podemos producir máximo {vino_max} litros de vino")
+```
+
+#### Graficar la FPP
+
+```python
+# Graficar la FPP con un punto de producción
+fpp_espana.graficar(
+    punto_produccion=(50, 25),  # Marcar el punto (50 tela, 25 vino)
+    color='#0066FF'
+)
+```
+
+---
+
+### Modelo Ricardiano
+
+El Modelo Ricardiano explica el comercio internacional basado en diferencias en la productividad del trabajo entre países. Demuestra que el comercio beneficia a todos los países, incluso si uno es más productivo en todos los bienes.
+
+#### Teoría del modelo
+
+**Ventaja Absoluta**: Un país tiene ventaja absoluta si puede producir más de un bien con los mismos recursos.
+
+**Ventaja Comparativa**: Un país tiene ventaja comparativa en el bien que puede producir con menor costo de oportunidad.
+
+**Principio de Ricardo**: Los países deben especializarse en producir el bien en el que tienen ventaja comparativa, no ventaja absoluta.
+
+#### Ejemplo completo: España vs Colombia
+
+```python
+from oikos import BienEconomico, FPP, Ricardiano
+
+# Definir los bienes
+tela = BienEconomico("Tela", "metros")
+vino = BienEconomico("Vino", "litros")
+
+# Crear FPPs
+fpp_espana = FPP(tela, vino, max_bien1=100, max_bien2=50, nombre_pais="España")
+fpp_colombia = FPP(tela, vino, max_bien1=80, max_bien2=120, nombre_pais="Colombia")
+
+# Crear modelo ricardiano
+modelo = Ricardiano(
+    pais1="España",
+    pais2="Colombia",
+    bien1=tela,
+    bien2=vino,
+    fpp1=fpp_espana,
+    fpp2=fpp_colombia
+)
+
+# Establecer producción sin comercio (autarquía)
+# En autarquía, cada país produce en algún punto de su FPP
+modelo.establecerProduccionSinComercio(
+    pais1_bien1=50,   # España: 50 metros de tela
+    pais1_bien2=25,   # España: 25 litros de vino
+    pais2_bien1=40,   # Colombia: 40 metros de tela
+    pais2_bien2=60    # Colombia: 60 litros de vino
+)
+
+# Análisis de ventajas
+ventaja_absoluta = modelo.ventajaAbsoluta()
+print("VENTAJA ABSOLUTA:")
+print(f"  Tela: {ventaja_absoluta['Tela']}")      # España (100 > 80)
+print(f"  Vino: {ventaja_absoluta['Vino']}")      # Colombia (120 > 50)
+
+ventaja_comparativa = modelo.ventajaComparativa()
+print("\nVENTAJA COMPARATIVA:")
+print(f"  Tela: {ventaja_comparativa['Tela']}")   # España (CO = 0.5 < 0.67)
+print(f"  Vino: {ventaja_comparativa['Vino']}")   # Colombia (CO = 1.5 < 2.0)
+```
+
+#### ¿Cómo se determina la ventaja comparativa?
+
+```python
+# Costos de oportunidad en cada país
+co_tela_espana = fpp_espana.costoOportunidad(tela)      # 0.5 litros de Vino
+co_tela_colombia = fpp_colombia.costoOportunidad(tela)  # 1.5 litros de Vino
+
+co_vino_espana = fpp_espana.costoOportunidad(vino)      # 2.0 metros de Tela
+co_vino_colombia = fpp_colombia.costoOportunidad(vino)  # 0.67 metros de Tela
+
+print("COSTOS DE OPORTUNIDAD:")
+print(f"Tela - España: {co_tela_espana:.2f} litros de Vino")
+print(f"Tela - Colombia: {co_tela_colombia:.2f} litros de Vino")
+print(f"Vino - España: {co_vino_espana:.2f} metros de Tela")
+print(f"Vino - Colombia: {co_vino_colombia:.2f} metros de Tela")
+
+print("\nINTERPRETACIÓN:")
+print("• España tiene MENOR costo de oportunidad en Tela (0.5 < 1.5)")
+print("  → España tiene ventaja comparativa en Tela")
+print("• Colombia tiene MENOR costo de oportunidad en Vino (0.67 < 2.0)")
+print("  → Colombia tiene ventaja comparativa en Vino")
+```
+
+---
+
+### Ventaja Absoluta vs Comparativa
+
+**Caso interesante**: Un país puede tener ventaja absoluta en ambos bienes, pero aún así beneficiarse del comercio.
+
+```python
+from oikos import BienEconomico, FPP, Ricardiano
+
+tela = BienEconomico("Tela", "metros")
+vino = BienEconomico("Vino", "litros")
+
+# Portugal es más eficiente en AMBOS bienes (ventaja absoluta en ambos)
+fpp_portugal = FPP(tela, vino, max_bien1=90, max_bien2=120, nombre_pais="Portugal")
+
+# Inglaterra es menos eficiente en ambos
+fpp_inglaterra = FPP(tela, vino, max_bien1=100, max_bien2=50, nombre_pais="Inglaterra")
+
+modelo = Ricardiano(
+    pais1="Portugal",
+    pais2="Inglaterra",
+    bien1=tela,
+    bien2=vino,
+    fpp1=fpp_portugal,
+    fpp2=fpp_inglaterra
+)
+
+# Analizar ventajas
+va = modelo.ventajaAbsoluta()
+vc = modelo.ventajaComparativa()
+
+print("VENTAJA ABSOLUTA:")
+print(f"  Tela: {va['Tela']}")    # Inglaterra (100 > 90)
+print(f"  Vino: {va['Vino']}")    # Portugal (120 > 50)
+
+print("\nVENTAJA COMPARATIVA:")
+print(f"  Tela: {vc['Tela']}")    # Inglaterra (CO = 0.5 < 1.33)
+print(f"  Vino: {vc['Vino']}")    # Portugal (CO = 0.75 < 2.0)
+
+print("\n¡CONCLUSIÓN CLAVE!")
+print("Aunque Portugal tiene ventaja absoluta en Vino,")
+print("ambos países se benefician si se especializan según ventaja comparativa:")
+print("  • Inglaterra → Tela (donde su desventaja es menor)")
+print("  • Portugal → Vino (donde su ventaja es mayor)")
+```
+
+---
+
+### Términos de Intercambio
+
+Los términos de intercambio determinan **cuánto de un bien se intercambia por una unidad del otro**.
+
+#### Rango de términos mutuamente beneficiosos
+
+Para que el comercio beneficie a ambos países, los términos de intercambio deben estar **entre los costos de oportunidad de ambos países**.
+
+```python
+# Usando el modelo anterior (España vs Colombia)
+terminos = modelo.terminosIntercambio()
+
+print("TÉRMINOS DE INTERCAMBIO MUTUAMENTE BENEFICIOSOS:")
+print(f"Tela: entre {terminos['Tela'][0]:.2f} y {terminos['Tela'][1]:.2f} litros de Vino")
+print(f"Vino: entre {terminos['Vino'][0]:.2f} y {terminos['Vino'][1]:.2f} metros de Tela")
+
+# Interpretación:
+# Si 1 metro de Tela se intercambia por 0.8 litros de Vino:
+#   • España gana (su CO era 0.5, ahora obtiene 0.8)
+#   • Colombia gana (su CO era 1.5, ahora paga solo 0.8)
+```
+
+#### Simulación de comercio completa
+
+```python
+# Establecer especialización completa según ventaja comparativa
+modelo.establecerEspecializacionCompleta()
+
+# Establecer el patrón de comercio
+# España exporta Tela (su ventaja comparativa)
+modelo.establecerComercio(
+    exportador="España",
+    bien_exportado=tela,
+    cantidad_exportada=40  # España exporta 40 metros de tela
+)
+
+# Calcular ganancias del comercio
+ganancias = modelo.gananciaComercio()
+
+print("\nGANANCIAS DEL COMERCIO:")
+for pais in ["España", "Colombia"]:
+    print(f"\n{pais}:")
+    for bien in ["Tela", "Vino"]:
+        ganancia = ganancias[pais][bien]
+        if ganancia > 0:
+            print(f"  {bien}: +{ganancia:.1f} (GANA)")
+        elif ganancia < 0:
+            print(f"  {bien}: {ganancia:.1f}")
+        else:
+            print(f"  {bien}: 0.0")
+
+# Mostrar análisis completo con tablas Rich
+modelo.mostrarAnalisis()
+```
+
+#### Visualización del comercio
+
+```python
+# Graficar las FPPs de ambos países
+modelo.graficarFPPs()
+
+# Graficar el comercio con puntos de producción y consumo
+modelo.graficarComercio()
+```
+
+Esta gráfica mostrará:
+- **FPP** de cada país (línea azul)
+- **Punto naranja**: Consumo/Producción sin comercio (autarquía)
+- **Punto rojo**: Producción con especialización
+- **Punto verde**: Consumo con comercio (¡fuera de la FPP original!)
+- **Línea púrpura**: Intercambio comercial
+
+---
+
+### Modelo de Factores Específicos
+
+El Modelo de Factores Específicos analiza el comercio cuando algunos factores de producción son **específicos de ciertos sectores** y no pueden moverse entre industrias (en el corto plazo).
+
+#### Teoría del modelo
+
+**Supuestos**:
+- Tres factores de producción:
+  - **Trabajo (L)**: Móvil entre sectores
+  - **Capital sector 1 (K1)**: Específico del sector 1
+  - **Capital sector 2 (K2)**: Específico del sector 2
+- La apertura comercial afecta de manera diferente a cada factor
+
+#### Uso básico
+
+```python
+from oikos import FactoresEspecificos
+
+# Crear modelo
+modelo = FactoresEspecificos(
+    nombre_pais="Portugal",
+    sector1="Manufacturas",
+    sector2="Alimentos",
+    trabajo_total=100,   # 100 trabajadores disponibles
+    capital1=50,         # Capital específico de Manufacturas
+    capital2=30          # Capital específico de Alimentos
+)
+
+# Asignar trabajo entre sectores
+modelo.asignarTrabajo(trabajo_sector1=60)
+# 60 trabajadores en Manufacturas, 40 en Alimentos
+
+# Calcular producción usando función Cobb-Douglas
+Q_manufacturas, Q_alimentos = modelo.produccion(alpha=0.5)
+
+print(f"Producción de Manufacturas: {Q_manufacturas:.2f}")
+print(f"Producción de Alimentos: {Q_alimentos:.2f}")
+```
+
+#### Análisis de efectos redistributivos
+
+```python
+# Antes de la apertura comercial
+modelo.asignarTrabajo(trabajo_sector1=50)
+Q1_antes, Q2_antes = modelo.produccion(alpha=0.5)
+
+# Después de la apertura (el trabajo se reasigna)
+modelo.asignarTrabajo(trabajo_sector1=70)  # Más trabajo a Manufacturas
+Q1_despues, Q2_despues = modelo.produccion(alpha=0.5)
+
+print("EFECTOS DE LA APERTURA COMERCIAL:")
+print(f"Manufacturas: {Q1_antes:.2f} → {Q1_despues:.2f} ({Q1_despues - Q1_antes:+.2f})")
+print(f"Alimentos: {Q2_antes:.2f} → {Q2_despues:.2f} ({Q2_despues - Q2_antes:+.2f})")
+
+print("\nEFECTOS REDISTRIBUTIVOS:")
+print("• Propietarios de K1 (capital de Manufacturas): GANAN")
+print("• Propietarios de K2 (capital de Alimentos): PIERDEN")
+print("• Trabajadores: Efecto ambiguo (depende del cambio en salarios)")
+```
+
+---
+
 ## Visualización
 
 ### Lienzo Simple
@@ -756,7 +1104,7 @@ lienzo.graficar()
 
 #### Método graficar() directo
 
-Desde v0.3.0, puedes graficar directamente desde las clases:
+Desde v0.3.1, puedes graficar directamente desde las clases:
 
 ```python
 # Graficar solo demanda
@@ -1169,6 +1517,131 @@ print(f"  Consumidores pagan: ${Pc - eq_libre['P*']:.2f} más")
 print(f"  Productores pierden: ${eq_libre['P*'] - Ps:.2f}")
 ```
 
+### Análisis Completo de Comercio Internacional
+
+```python
+from oikos import BienEconomico, FPP, Ricardiano
+
+# Definir bienes
+tela = BienEconomico("Tela", "metros")
+vino = BienEconomico("Vino", "litros")
+
+# Crear FPPs
+fpp_espana = FPP(tela, vino, max_bien1=100, max_bien2=50, nombre_pais="España")
+fpp_colombia = FPP(tela, vino, max_bien1=80, max_bien2=120, nombre_pais="Colombia")
+
+# Crear modelo
+modelo = Ricardiano(
+    pais1="España",
+    pais2="Colombia",
+    bien1=tela,
+    bien2=vino,
+    fpp1=fpp_espana,
+    fpp2=fpp_colombia
+)
+
+# PASO 1: Situación sin comercio (Autarquía)
+print("=" * 60)
+print("PASO 1: AUTARQUÍA (SIN COMERCIO)")
+print("=" * 60)
+
+modelo.establecerProduccionSinComercio(
+    pais1_bien1=50,   # España: 50 tela, 25 vino
+    pais1_bien2=25,
+    pais2_bien1=40,   # Colombia: 40 tela, 60 vino
+    pais2_bien2=60
+)
+
+print("\nConsumo sin comercio:")
+print(f"  España:   {50} tela, {25} vino")
+print(f"  Colombia: {40} tela, {60} vino")
+print(f"  TOTAL:    {50+40} tela, {25+60} vino")
+
+# PASO 2: Análisis de ventajas
+print("\n" + "=" * 60)
+print("PASO 2: ANÁLISIS DE VENTAJAS COMPARATIVAS")
+print("=" * 60)
+
+# Costos de oportunidad
+co_tela_esp = fpp_espana.costoOportunidad(tela)
+co_tela_col = fpp_colombia.costoOportunidad(tela)
+co_vino_esp = fpp_espana.costoOportunidad(vino)
+co_vino_col = fpp_colombia.costoOportunidad(vino)
+
+print("\nCostos de Oportunidad:")
+print(f"  Tela:")
+print(f"    España:   {co_tela_esp:.2f} litros de Vino por metro")
+print(f"    Colombia: {co_tela_col:.2f} litros de Vino por metro")
+print(f"    → España tiene MENOR CO en Tela ✓")
+
+print(f"\n  Vino:")
+print(f"    España:   {co_vino_esp:.2f} metros de Tela por litro")
+print(f"    Colombia: {co_vino_col:.2f} metros de Tela por litro")
+print(f"    → Colombia tiene MENOR CO en Vino ✓")
+
+vc = modelo.ventajaComparativa()
+print(f"\nVentajas Comparativas:")
+print(f"  Tela → {vc['Tela']} debe especializarse en Tela")
+print(f"  Vino → {vc['Vino']} debe especializarse en Vino")
+
+# PASO 3: Especialización y comercio
+print("\n" + "=" * 60)
+print("PASO 3: ESPECIALIZACIÓN Y COMERCIO")
+print("=" * 60)
+
+modelo.establecerEspecializacionCompleta()
+
+print("\nProducción con especialización:")
+print(f"  España:   {100} tela, {0} vino (especialización total en Tela)")
+print(f"  Colombia: {0} tela, {120} vino (especialización total en Vino)")
+print(f"  TOTAL:    {100} tela, {120} vino")
+
+print("\n¡La producción mundial AUMENTÓ!")
+print(f"  Tela: {90} → {100} (+{10} metros)")
+print(f"  Vino: {85} → {120} (+{35} litros)")
+
+# Establecer comercio
+modelo.establecerComercio(
+    exportador="España",
+    bien_exportado=tela,
+    cantidad_exportada=40
+)
+
+# PASO 4: Ganancias del comercio
+print("\n" + "=" * 60)
+print("PASO 4: GANANCIAS DEL COMERCIO")
+print("=" * 60)
+
+ganancias = modelo.gananciaComercio()
+
+print("\nConsumo CON comercio:")
+for pais in ["España", "Colombia"]:
+    cons = modelo.consumo_con_comercio[pais]
+    print(f"  {pais}: {cons['Tela']:.1f} tela, {cons['Vino']:.1f} vino")
+
+print("\nGanancias absolutas:")
+for pais in ["España", "Colombia"]:
+    print(f"\n  {pais}:")
+    for bien in ["Tela", "Vino"]:
+        gan = ganancias[pais][bien]
+        if gan > 0:
+            print(f"    {bien}: +{gan:.1f} ✓")
+        else:
+            print(f"    {bien}: {gan:.1f}")
+
+print("\n" + "=" * 60)
+print("CONCLUSIÓN: ¡AMBOS PAÍSES GANAN CON EL COMERCIO!")
+print("=" * 60)
+
+# Mostrar análisis completo con tablas bonitas
+print("\n")
+modelo.mostrarAnalisis()
+
+# Graficar
+print("\nGenerando gráficos...")
+modelo.graficarComercio()
+```
+
 ---
 
 ## FAQ
@@ -1256,6 +1729,35 @@ fig.savefig("mi_grafico.png", dpi=300, bbox_inches='tight')
 - `politicaFiscal(tipo, magnitud, ...) -> Dict`
 - `politicaMonetaria(tipo, magnitud, ...) -> Dict`
 - `explicar() -> str`
+
+#### `BienEconomico`
+- `__init__(nombre: str, unidad: str = "unidades")`
+- Representa un bien económico con su nombre y unidad de medida
+
+#### `FPP`
+- `__init__(bien1, bien2, max_bien1, max_bien2, nombre_pais="País")`
+- `costoOportunidad(bien: BienEconomico) -> float`
+- `produccionFactible(cantidad_bien1: float, cantidad_bien2: float) -> bool`
+- `produccionBien2DadaBien1(cantidad_bien1: float) -> float`
+- `graficar(punto_produccion=None, color=None, mostrar=True)`
+
+#### `Ricardiano`
+- `__init__(pais1, pais2, bien1, bien2, fpp1, fpp2)`
+- `ventajaAbsoluta() -> Dict[str, str]`
+- `ventajaComparativa() -> Dict[str, str]`
+- `terminosIntercambio() -> Dict[str, Tuple[float, float]]`
+- `establecerProduccionSinComercio(pais1_bien1, pais1_bien2, pais2_bien1, pais2_bien2)`
+- `establecerEspecializacionCompleta()`
+- `establecerComercio(exportador, bien_exportado, cantidad_exportada)`
+- `gananciaComercio() -> Dict[str, Dict[str, float]]`
+- `mostrarAnalisis()`
+- `graficarFPPs(mostrar=True)`
+- `graficarComercio(mostrar=True)`
+
+#### `FactoresEspecificos`
+- `__init__(nombre_pais, sector1, sector2, trabajo_total, capital1, capital2)`
+- `asignarTrabajo(trabajo_sector1: float)`
+- `produccion(alpha: float = 0.5) -> Tuple[float, float]`
 
 #### `Lienzo`
 - `__init__(estilo=None, cuadrantes="I", relacionAspecto="auto", matriz=None, dimensionMatriz=None, alinearEjes=False)`
@@ -1353,7 +1855,7 @@ MIT License - Ver archivo LICENSE para más detalles.
 
 - **Autor**: Marcos Junior Hernández-Moreno
 - **Email**: [tu-email]
-- **GitHub**: https://github.com/tu-usuario/oikos
+- **GitHub**: https://github.com/marcosjuniorhernandez/economy
 - **Documentación**: https://oikos.readthedocs.io/
 
 ---
@@ -1364,7 +1866,7 @@ Si usas OIKOS en trabajos académicos, por favor cita:
 
 ```
 Marcos Junior Hernández-Moreno (2024). OIKOS: Librería para Economía en Python.
-Versión 0.3.0. https://github.com/tu-usuario/oikos
+Versión 0.3.0. https://github.com/marcosjuniorhernandez/economy
 ```
 
 BibTeX:
@@ -1374,7 +1876,7 @@ BibTeX:
   title = {OIKOS: Librería para Economía en Python},
   year = {2024},
   version = {0.3.0},
-  url = {https://github.com/tu-usuario/oikos}
+  url = {https://github.com/marcosjuniorhernandez/economy}
 }
 ```
 

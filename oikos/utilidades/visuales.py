@@ -163,7 +163,7 @@ class EstiloGrafico:
         >>> lienzo = ok.Lienzo(estilo=mi_estilo)
     """
 
-    # Paleta de colores VIVOS (nueva para v0.3.0)
+    # Paleta de colores VIVOS (nueva para v0.3.1)
     paletaColores: List[str] = field(default_factory=lambda: [
         # COLORES PUROS
         "#FF0000",  # ROJO
@@ -938,7 +938,7 @@ class Lienzo:
                 pad=15
             )
 
-        # RANGOS AUTOMÁTICOS (v0.3.0)
+        # RANGOS AUTOMÁTICOS (v0.3.1)
         # Las gráficas DEBEN ocupar TODO el espacio sin dejar márgenes
         if not rangoX or not rangoY:
             # Obtener los límites actuales de matplotlib (basados en los datos graficados)
@@ -989,7 +989,7 @@ class Lienzo:
         elif self.rangoX:
             xMin, xMax = self.rangoX
         else:
-            # AUTODETECCIÓN DE RANGO (v0.3.0)
+            # AUTODETECCIÓN DE RANGO (v0.3.1)
             # Si el usuario no especificó rango, intentamos deducirlo de los datos
             # Para tuplas (x, y), usamos directamente los valores de x
             if isinstance(funcion, tuple) and len(funcion) == 2:
