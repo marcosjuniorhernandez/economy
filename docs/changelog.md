@@ -6,6 +6,8 @@ El formato está basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.
 y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 ---
+## [0.3.1] - 2026-01-10
+Correción en el nombre del paquete de Oikos a oikos.
 
 ## [0.3.0] - 2026-01-10
 
